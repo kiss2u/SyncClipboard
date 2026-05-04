@@ -35,8 +35,8 @@ namespace SyncClipboard.WinUI3.Views
 
         public MainWindow()
         {
-            this.InitializeComponent();
             _viewModel = App.Current.Services.GetRequiredService<MainViewModel>();
+            this.InitializeComponent();
 
             ExtendsContentIntoTitleBar = true;
             SetTitleBar(_AppTitleBar.DraggableArea);
