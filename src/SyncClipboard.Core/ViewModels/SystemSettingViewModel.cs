@@ -309,9 +309,20 @@ public partial class SystemSettingViewModel : ObservableObject
     private static long GetDirectorySize(DirectoryInfo directory)
     {
         long size = 0;
-        foreach (var file in directory.EnumerateFiles("*", SearchOption.AllDirectories))
+        foreach (var folderName in Env.AppDataCopyWhitelistFolders)
         {
-            size += file.Length;
+            var subDir = new DirectoryInfo(Path.Combine(directory.FullName, folderName));
+            if (subDir.Exists)
+            {
+                foreach (var file in subDir.EnumerateFiles("*", SearchOption.AllDirectories))
+                    size += file.Length;
+            }
+        }
+        foreach (var fileName in Env.AppDataCopyWhitelistFiles)
+        {
+            var file = new FileInfo(Path.Combine(directory.FullName, fileName));
+            if (file.Exists)
+                size += file.Length;
         }
         return size;
     }
@@ -321,20 +332,36 @@ public partial class SystemSettingViewModel : ObservableObject
         Directory.CreateDirectory(destination);
         long copiedBytes = 0;
         int lastReported = -1;
-        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
+
+        void CopyFile(string srcFile)
         {
-            var relativePath = Path.GetRelativePath(source, file);
+            var relativePath = Path.GetRelativePath(source, srcFile);
             var destFile = Path.Combine(destination, relativePath);
             Directory.CreateDirectory(Path.GetDirectoryName(destFile)!);
-            File.Copy(file, destFile, overwrite: true);
-
-            copiedBytes += new FileInfo(file).Length;
+            File.Copy(srcFile, destFile, overwrite: true);
+            copiedBytes += new FileInfo(srcFile).Length;
             int pct = totalBytes > 0 ? (int)(copiedBytes * 100 / totalBytes) : 100;
             if (pct != lastReported)
             {
                 lastReported = pct;
                 progress.Report(pct);
             }
+        }
+
+        foreach (var folderName in Env.AppDataCopyWhitelistFolders)
+        {
+            var subDir = Path.Combine(source, folderName);
+            if (Directory.Exists(subDir))
+            {
+                foreach (var file in Directory.EnumerateFiles(subDir, "*", SearchOption.AllDirectories))
+                    CopyFile(file);
+            }
+        }
+        foreach (var fileName in Env.AppDataCopyWhitelistFiles)
+        {
+            var filePath = Path.Combine(source, fileName);
+            if (File.Exists(filePath))
+                CopyFile(filePath);
         }
         progress.Report(100);
     }
