@@ -124,6 +124,24 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 App Data Folder 的本地化字符串。
+        /// </summary>
+        public static string AppDataFolder {
+            get {
+                return ResourceManager.GetString("AppDataFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 App data copied successfully. Click OK to restart immediately. 的本地化字符串。
+        /// </summary>
+        public static string AppDataFolderCopySuccess {
+            get {
+                return ResourceManager.GetString("AppDataFolderCopySuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Assistant 的本地化字符串。
         /// </summary>
         public static string Assistant {
@@ -156,6 +174,15 @@ namespace SyncClipboard.Core.I18n {
         public static string BlackList {
             get {
                 return ResourceManager.GetString("BlackList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Calculating size... 的本地化字符串。
+        /// </summary>
+        public static string CalculatingSize {
+            get {
+                return ResourceManager.GetString("CalculatingSize", resourceCulture);
             }
         }
         
@@ -228,6 +255,15 @@ namespace SyncClipboard.Core.I18n {
         public static string CertificatePemPath {
             get {
                 return ResourceManager.GetString("CertificatePemPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Change 的本地化字符串。
+        /// </summary>
+        public static string ChangeFolder {
+            get {
+                return ResourceManager.GetString("ChangeFolder", resourceCulture);
             }
         }
         
@@ -489,6 +525,15 @@ namespace SyncClipboard.Core.I18n {
         public static string CopyAppDataFolderPath {
             get {
                 return ResourceManager.GetString("CopyAppDataFolderPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Copying data... {0}% 的本地化字符串。
+        /// </summary>
+        public static string CopyingData {
+            get {
+                return ResourceManager.GetString("CopyingData", resourceCulture);
             }
         }
         
@@ -1467,6 +1512,15 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 Not enough free space on target. Required: {0} MB, available: {1} MB. 的本地化字符串。
+        /// </summary>
+        public static string NotEnoughDiskSpace {
+            get {
+                return ResourceManager.GetString("NotEnoughDiskSpace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Show file sync progress with system notifications 的本地化字符串。
         /// </summary>
         public static string NotifyFileSyncProgress {
@@ -1796,6 +1850,24 @@ namespace SyncClipboard.Core.I18n {
         public static string RestartApp {
             get {
                 return ResourceManager.GetString("RestartApp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Restore Default 的本地化字符串。
+        /// </summary>
+        public static string RestoreDefaultFolder {
+            get {
+                return ResourceManager.GetString("RestoreDefaultFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Custom app data path cleared. Click OK to restart immediately. 的本地化字符串。
+        /// </summary>
+        public static string RestoreDefaultFolderConfirm {
+            get {
+                return ResourceManager.GetString("RestoreDefaultFolderConfirm", resourceCulture);
             }
         }
         

@@ -411,6 +411,24 @@
   <data name="Dark" xml:space="preserve">
     <value>深色</value>
   </data>
+  <data name="AppDataFolder" xml:space="preserve">
+    <value>应用数据文件夹</value>
+  </data>
+  <data name="ChangeFolder" xml:space="preserve">
+    <value>修改</value>
+  </data>
+  <data name="CalculatingSize" xml:space="preserve">
+    <value>正在计算大小...</value>
+  </data>
+  <data name="CopyingData" xml:space="preserve">
+    <value>正在复制数据... {0}%</value>
+  </data>
+  <data name="NotEnoughDiskSpace" xml:space="preserve">
+    <value>目标位置空间不足，需要 {0} MB，剩余 {1} MB。</value>
+  </data>
+  <data name="AppDataFolderCopySuccess" xml:space="preserve">
+    <value>应用数据复制成功，点击确定立即重启。</value>
+  </data>
   <data name="CopyAppDataFolderPath" xml:space="preserve">
     <value>复制应用数据文件夹路径</value>
   </data>
@@ -633,6 +651,12 @@ Esc：关闭面板</value>
   </data>
   <data name="RestartApp" xml:space="preserve">
     <value>重新启动</value>
+  </data>
+  <data name="RestoreDefaultFolder" xml:space="preserve">
+    <value>恢复默认</value>
+  </data>
+  <data name="RestoreDefaultFolderConfirm" xml:space="preserve">
+    <value>已清除自定义应用数据路径，点击确定立即重启。</value>
   </data>
   <data name="DownloadPage" xml:space="preserve">
     <value>下载地址</value>

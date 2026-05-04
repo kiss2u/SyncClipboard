@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using SyncClipboard.Core.Commons;
 using SyncClipboard.Core.I18n;
@@ -6,6 +7,7 @@ using SyncClipboard.Core.Interfaces;
 using SyncClipboard.Core.Models;
 using SyncClipboard.Core.Models.UserConfigs;
 using SyncClipboard.Core.Utilities;
+using System.Diagnostics;
 
 namespace SyncClipboard.Core.ViewModels;
 
@@ -132,6 +134,16 @@ public partial class SystemSettingViewModel : ObservableObject
 
     public bool ShowStartUpSetting { get; } = OperatingSystem.IsWindows() || OperatingSystem.IsLinux();
 
+    public static string AppDataDirectory => Env.AppDataDirectory;
+
+    public static bool IsUsingCustomAppDataDirectory => Env.IsUsingCustomAppDataDirectory;
+
+    [ObservableProperty]
+    private bool isMovingAppData;
+
+    [ObservableProperty]
+    private string appDataMoveProgress = string.Empty;
+
     public bool StartUpWithSystem
     {
         get => StartUpHelper.Status();
@@ -140,5 +152,190 @@ public partial class SystemSettingViewModel : ObservableObject
             StartUpHelper.Set(value);
             OnPropertyChanged(nameof(StartUpWithSystem));
         }
+    }
+
+    /// <summary>
+    /// Called by code-behind after a folder is picked by the user.
+    /// Handles copying, error/success dialogs, and restart prompt via IMainWindowDialog.
+    /// </summary>
+    public async Task ChangeAppDataFolderAsync(string targetFolder)
+    {
+        if (Env.IsSamePath(targetFolder, Env.AppDataDirectory))
+            return;
+
+        var dialog = _services.GetRequiredService<IMainWindowDialog>();
+        IsMovingAppData = true;
+        string? error;
+        try
+        {
+            error = await MoveAppDataFolderAsync(targetFolder);
+        }
+        finally
+        {
+            IsMovingAppData = false;
+            AppDataMoveProgress = string.Empty;
+        }
+
+        if (error is not null)
+        {
+            await dialog.ShowMessageAsync(Strings.AppDataFolder, error);
+            return;
+        }
+
+        await dialog.ShowMessageAsync(Strings.AppDataFolder, Strings.AppDataFolderCopySuccess);
+        RestartApp();
+    }
+
+    /// <summary>
+    /// Clears the custom app data path config so the app uses the default folder on next start.
+    /// </summary>
+    [RelayCommand]
+    public async Task RestoreDefaultAppDataFolderAsync()
+    {
+        var dialog = _services.GetRequiredService<IMainWindowDialog>();
+        IsMovingAppData = true;
+        string? error;
+        try
+        {
+            var defaultFolder = Path.Combine(Env.UserAppDataDirectory, Env.SoftName);
+            Directory.CreateDirectory(defaultFolder);
+            error = await CopyAppDataFilesAsync(defaultFolder);
+            if (error is null)
+            {
+                try
+                {
+                    await Env.SaveCustomAppDataDirectoryAsync(string.Empty);
+                }
+                catch (Exception ex)
+                {
+                    error = ex.Message;
+                }
+            }
+        }
+        finally
+        {
+            IsMovingAppData = false;
+            AppDataMoveProgress = string.Empty;
+        }
+
+        if (error is not null)
+        {
+            await dialog.ShowMessageAsync(Strings.AppDataFolder, error);
+            return;
+        }
+
+        await dialog.ShowMessageAsync(Strings.AppDataFolder, Strings.RestoreDefaultFolderConfirm);
+        RestartApp();
+    }
+
+    private static void RestartApp()
+    {
+        if (string.IsNullOrEmpty(Env.ProgramPath)) return;
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = Env.ProgramPath,
+                UseShellExecute = true,
+                Arguments = StartArguments.ShutdownPrivious
+            });
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Copies app data files to the target folder (without touching the config).
+    /// Returns null on success, or a user-readable error message on failure.
+    /// </summary>
+    private async Task<string?> CopyAppDataFilesAsync(string targetFolder)
+    {
+        AppDataMoveProgress = Strings.CalculatingSize;
+        var sourceDir = new DirectoryInfo(Env.AppDataDirectory);
+        long sourceSize = await Task.Run(() => GetDirectorySize(sourceDir));
+
+        var rootPath = Path.GetPathRoot(targetFolder);
+        if (rootPath is null)
+        {
+            return Strings.NotEnoughDiskSpace;
+        }
+
+        var drive = new DriveInfo(rootPath);
+        long availableBytes = drive.AvailableFreeSpace;
+        if (availableBytes < sourceSize)
+        {
+            long requiredMB = sourceSize / (1024 * 1024) + 1;
+            long availableMB = availableBytes / (1024 * 1024);
+            return string.Format(Strings.NotEnoughDiskSpace, requiredMB, availableMB);
+        }
+
+        var progress = new Progress<int>(pct =>
+            AppDataMoveProgress = string.Format(Strings.CopyingData, pct));
+
+        try
+        {
+            await Task.Run(() => CopyDirectoryWithProgress(Env.AppDataDirectory, targetFolder, sourceSize, progress));
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Copies app data to the target folder and saves the custom path config.
+    /// Returns null on success, or a user-readable error message on failure.
+    /// </summary>
+    private async Task<string?> MoveAppDataFolderAsync(string targetFolder)
+    {
+        var copyError = await CopyAppDataFilesAsync(targetFolder);
+        if (copyError is not null) return copyError;
+
+        // Write to the independent config file in the default AppData location.
+        // This file must never be in the custom path, as it determines that path at startup.
+        try
+        {
+            await Env.SaveCustomAppDataDirectoryAsync(targetFolder);
+        }
+        catch (Exception ex)
+        {
+            return ex.Message;
+        }
+
+        return null;
+    }
+
+    private static long GetDirectorySize(DirectoryInfo directory)
+    {
+        long size = 0;
+        foreach (var file in directory.EnumerateFiles("*", SearchOption.AllDirectories))
+        {
+            size += file.Length;
+        }
+        return size;
+    }
+
+    private static void CopyDirectoryWithProgress(string source, string destination, long totalBytes, IProgress<int> progress)
+    {
+        Directory.CreateDirectory(destination);
+        long copiedBytes = 0;
+        int lastReported = -1;
+        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
+        {
+            var relativePath = Path.GetRelativePath(source, file);
+            var destFile = Path.Combine(destination, relativePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(destFile)!);
+            File.Copy(file, destFile, overwrite: true);
+
+            copiedBytes += new FileInfo(file).Length;
+            int pct = totalBytes > 0 ? (int)(copiedBytes * 100 / totalBytes) : 100;
+            if (pct != lastReported)
+            {
+                lastReported = pct;
+                progress.Report(pct);
+            }
+        }
+        progress.Report(100);
     }
 }

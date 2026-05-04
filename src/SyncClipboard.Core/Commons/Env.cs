@@ -1,4 +1,7 @@
-﻿namespace SyncClipboard.Core.Commons
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
+
+namespace SyncClipboard.Core.Commons
 {
     public static class Env
     {
@@ -15,6 +18,13 @@
         public const string LinuxPackageAppId = "xyz.jericx.desktop.syncclipboard";
         public static readonly string LinuxUserDesktopEntryFolder = UserPath(".local/share/applications");
         public static readonly string ProgramDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        /// <summary>
+        /// Path to the independent config file that stores the custom AppData directory.
+        /// Always located in a fixed sibling folder that never changes, never in the custom path.
+        /// </summary>
+        public static readonly string AppDataPathConfigPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            SoftName + "_global", "GlobalConfig.json");
         public static readonly string AppDataDirectory = GetOrCreateFolder(GetAppDataDirectory());
         public static readonly string UserAppDataDirectory = GetUserAppDataDirectory();
         public static readonly string ProgramPath = GetProgramPath();
@@ -31,6 +41,15 @@
         public static string ImageTemplateFolder => Path.Combine(TemplateFileFolder, "temp images");
         public static readonly string LogFolder = FullPath("log");
         public static readonly string UpdateFolder = GetOrCreateFolder(FullPath("update"));
+
+        public static bool IsUsingCustomAppDataDirectory =>
+            !IsSamePath(AppDataDirectory, Path.Combine(UserAppDataDirectory, SoftName));
+
+        public static bool IsSamePath(string path1, string path2) =>
+            string.Equals(
+                Path.TrimEndingDirectorySeparator(Path.GetFullPath(path1)),
+                Path.TrimEndingDirectorySeparator(Path.GetFullPath(path2)),
+                OperatingSystem.IsLinux() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase);
 
         public static string FullPath(string relativePath)
         {
@@ -57,8 +76,43 @@
 
         private static string GetAppDataDirectory()
         {
+            var customPath = TryGetCustomAppDataDirectory();
+            if (customPath != null)
+            {
+                return customPath;
+            }
             var appDataDirectory = Path.Combine(GetUserAppDataDirectory(), SoftName);
             return appDataDirectory;
+        }
+
+        private static string? TryGetCustomAppDataDirectory()
+        {
+            try
+            {
+                if (!File.Exists(AppDataPathConfigPath)) return null;
+                var text = File.ReadAllText(AppDataPathConfigPath);
+                var jsonNode = JsonNode.Parse(text);
+                var customPath = jsonNode?["CustomAppDataDirectory"]?.GetValue<string>();
+                if (string.IsNullOrEmpty(customPath)) return null;
+                if (!Directory.Exists(customPath)) return null;
+                return customPath;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static readonly JsonSerializerOptions _indentedJsonOptions = new() { WriteIndented = true };
+
+        public static async Task SaveCustomAppDataDirectoryAsync(string path)
+        {
+            var configDir = Path.GetDirectoryName(AppDataPathConfigPath)!;
+            Directory.CreateDirectory(configDir);
+            var json = JsonSerializer.Serialize(
+                new { CustomAppDataDirectory = path },
+                _indentedJsonOptions);
+            await File.WriteAllTextAsync(AppDataPathConfigPath, json);
         }
 
         private static string GetOrCreateFolder(string path)

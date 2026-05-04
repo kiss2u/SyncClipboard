@@ -35,4 +35,19 @@ public class AvaloniaDialog : IMainWindowDialog
             : await dialog.ShowAsync();
         return result == ContentDialogResult.Primary;
     }
+
+    public async Task ShowMessageAsync(string title, string message)
+    {
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = message,
+            PrimaryButtonText = Strings.Confirm,
+        };
+
+        if (_window != null)
+            await dialog.ShowAsync(_window);
+        else
+            await dialog.ShowAsync();
+    }
 }

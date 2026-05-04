@@ -35,4 +35,17 @@ public class WinUIDialog : IMainWindowDialog
         var result = await dialog.ShowAsync();
         return result == ContentDialogResult.Primary;
     }
+
+    public async Task ShowMessageAsync(string title, string message)
+    {
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = message,
+            PrimaryButtonText = Strings.Confirm,
+            XamlRoot = _xamlRoot ?? App.Current.MainWindow.Content.XamlRoot
+        };
+
+        await dialog.ShowAsync();
+    }
 }

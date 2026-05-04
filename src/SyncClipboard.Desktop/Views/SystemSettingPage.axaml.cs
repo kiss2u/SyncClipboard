@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using SyncClipboard.Core.Clipboard;
@@ -89,5 +90,32 @@ public partial class SystemSettingPage : UserControl
     {
         var dialog = new ProxySettingDialog();
         dialog.ShowAsync();
+    }
+
+    private async void ChangeAppDataFolder(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null) return;
+
+        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = Strings.AppDataFolder,
+            AllowMultiple = false
+        });
+
+        if (folders is null || folders.Count == 0) return;
+
+        var selectedFolder = folders[0].Path.LocalPath;
+        var viewModel = (SystemSettingViewModel)DataContext!;
+
+        if (sender is Button button) button.IsEnabled = false;
+        try
+        {
+            await viewModel.ChangeAppDataFolderAsync(selectedFolder);
+        }
+        finally
+        {
+            if (sender is Button btn) btn.IsEnabled = true;
+        }
     }
 }

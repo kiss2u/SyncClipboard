@@ -7,6 +7,7 @@
       xmlns:ui="using:CommunityToolkit.WinUI.Controls"
       xmlns:vm="using:SyncClipboard.Core.ViewModels"
       xmlns:i18n="using:SyncClipboard.Core.I18n"
+      xmlns:vc="using:SyncClipboard.WinUI3.ValueConverters"
       MinWidth="550"
       BorderBrush="Transparent"
       mc:Ignorable="d">
@@ -33,6 +34,13 @@
                 </ui:SettingsCard>
                 <ui:SettingsCard Header="{x:Bind i18n:Strings.Proxy}">
                     <Button Click="ShowProxySettingDialog" Content="{x:Bind i18n:Strings.Config}" />
+                </ui:SettingsCard>
+                <ui:SettingsCard Header="{x:Bind i18n:Strings.AppDataFolder}" Description="{x:Bind vm:SystemSettingViewModel.AppDataDirectory, Mode=OneTime}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{x:Bind _viewModel.AppDataMoveProgress, Mode=OneWay}" Visibility="{x:Bind vc:ConvertMethod.BoolToVisibility(_viewModel.IsMovingAppData), Mode=OneWay}" VerticalAlignment="Center" />
+                        <Button Command="{x:Bind _viewModel.RestoreDefaultAppDataFolderCommand}" Content="{x:Bind i18n:Strings.RestoreDefaultFolder}" Visibility="{x:Bind vc:ConvertMethod.BoolToVisibility(vm:SystemSettingViewModel.IsUsingCustomAppDataDirectory), Mode=OneTime}" />
+                        <Button Click="ChangeAppDataFolder" Content="{x:Bind i18n:Strings.ChangeFolder}" IsEnabled="{x:Bind vc:ConvertMethod.BoolNegate(_viewModel.IsMovingAppData), Mode=OneWay}" />
+                    </StackPanel>
                 </ui:SettingsCard>
             </ui:SettingsExpander.Items>
         </ui:SettingsExpander>

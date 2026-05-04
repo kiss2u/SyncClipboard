@@ -411,6 +411,24 @@
   <data name="Dark" xml:space="preserve">
     <value>Dark</value>
   </data>
+  <data name="AppDataFolder" xml:space="preserve">
+    <value>App Data Folder</value>
+  </data>
+  <data name="ChangeFolder" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="CalculatingSize" xml:space="preserve">
+    <value>Calculating size...</value>
+  </data>
+  <data name="CopyingData" xml:space="preserve">
+    <value>Copying data... {0}%</value>
+  </data>
+  <data name="NotEnoughDiskSpace" xml:space="preserve">
+    <value>Not enough free space on target. Required: {0} MB, available: {1} MB.</value>
+  </data>
+  <data name="AppDataFolderCopySuccess" xml:space="preserve">
+    <value>App data copied successfully. Click OK to restart immediately.</value>
+  </data>
   <data name="CopyAppDataFolderPath" xml:space="preserve">
     <value>Copy app data folder path to clipboard</value>
   </data>
@@ -635,6 +653,12 @@ Double click image: View full image</value>
   </data>
   <data name="RestartApp" xml:space="preserve">
     <value>Restart</value>
+  </data>
+  <data name="RestoreDefaultFolder" xml:space="preserve">
+    <value>Restore Default</value>
+  </data>
+  <data name="RestoreDefaultFolderConfirm" xml:space="preserve">
+    <value>Custom app data path cleared. Click OK to restart immediately.</value>
   </data>
   <data name="DownloadPage" xml:space="preserve">
     <value>Download</value>
