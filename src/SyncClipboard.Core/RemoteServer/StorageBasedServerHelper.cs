@@ -49,9 +49,16 @@ internal class StorageBasedServerHelper(IServiceProvider sp, IStorageBasedServer
             _logger.Write($"[PULL] Downloaded {fileName} to {dataPath}");
             _trayIcon.SetStatusString(ServerConstants.StatusName, "Running.");
         }
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            const string timeoutMessage = "File download timed out";
+            SetErrorStatus(timeoutMessage);
+            throw new ProfileDataDownloadException(timeoutMessage);
+        }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
-            ThrowServerException("Failed to download profile data", ex);
+            SetErrorStatus("Failed to download profile data", ex);
+            throw new ProfileDataDownloadException("Failed to download profile data", ex);
         }
     }
 

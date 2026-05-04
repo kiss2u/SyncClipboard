@@ -405,6 +405,7 @@ public class DownloadService : Service
             {
                 await DownloadAndSetRemoteProfileToLocal(profile, token);
                 _remoteProfileCache = profile;
+                _nonServerErrorTimes = 0;
             }
             _trayIcon.SetStatusString(SERVICE_NAME, "Running.", false);
         }
@@ -490,14 +491,31 @@ public class DownloadService : Service
     private async Task DownloadFileProfileData(Profile profile, CancellationToken cancelToken)
     {
         await _logger.WriteAsync($"Downloading: {profile.ShortDisplayText}");
-        _toastReporter = new ProgressToastReporter(
-            SERVICE_NAME,
-            profile.ShortDisplayText,
-            I18n.Strings.DownloadingFile,
-            useToast: _syncConfig.NotifyFileSyncProgress);
 
-        var remoteServer = _remoteClipboardServerFactory.Current;
-        await remoteServer.DownloadProfileDataAsync(profile, _toastReporter, cancelToken);
+        for (int i = 0; i <= _syncConfig.RetryTimes; i++)
+        {
+            _toastReporter?.CancelSicent();
+            _toastReporter = new ProgressToastReporter(
+                SERVICE_NAME,
+                profile.ShortDisplayText,
+                I18n.Strings.DownloadingFile,
+                useToast: _syncConfig.NotifyFileSyncProgress);
+
+            try
+            {
+                var remoteServer = _remoteClipboardServerFactory.Current;
+                await remoteServer.DownloadProfileDataAsync(profile, _toastReporter, cancelToken);
+                return;
+            }
+            catch (ProfileDataDownloadException ex) when (i < _syncConfig.RetryTimes)
+            {
+                _toastReporter?.CancelSicent();
+                _toastReporter = null;
+                _trayIcon.SetStatusString(SERVICE_NAME, string.Format(I18n.Strings.UploadFailedStatus, i + 1, ex.Message), true);
+                await _logger.WriteAsync(LOG_TAG, $"Download attempt {i + 1} failed: {ex.Message}");
+                await Task.Delay(TimeSpan.FromSeconds(_syncConfig.IntervalTime), cancelToken);
+            }
+        }
     }
 
     private async Task<bool> IsLocalProfileObsolete(CancellationToken token)

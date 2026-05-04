@@ -15,6 +15,7 @@ public sealed class PollingDrivenServer : IRemoteClipboardServer
     // 轮询相关
     private Profile _lastKnownProfile = new UnknownProfile();
     private readonly SingletonTask _pollingTask = new SingletonTask();
+    private bool _isPollingStoppedDueToNetworkIssues = false;
 
     // Helpers
     private readonly TestAliveHelper _testAliveHelper;
@@ -129,6 +130,7 @@ public sealed class PollingDrivenServer : IRemoteClipboardServer
                             Message = $"Polling stopped after {maxRetryCount} failed attempts",
                             Exception = ex
                         });
+                        _isPollingStoppedDueToNetworkIssues = true;
                         break;
                     }
                 }
@@ -166,11 +168,15 @@ public sealed class PollingDrivenServer : IRemoteClipboardServer
         {
             _logger.Write("[TEST_ALIVE] Connection restored, resuming polling");
 
-            PollStatusEventImpl?.Invoke(this, new PollStatusEventArgs
+            if (_isPollingStoppedDueToNetworkIssues)
             {
-                Status = PollStatus.Resumed,
-                Message = "Network connection restored, polling resumed"
-            });
+                _isPollingStoppedDueToNetworkIssues = false;
+                PollStatusEventImpl?.Invoke(this, new PollStatusEventArgs
+                {
+                    Status = PollStatus.Resumed,
+                    Message = "Network connection restored, polling resumed"
+                });
+            }
 
             StartPolling(false);
         }
