@@ -92,7 +92,11 @@ abstract public class ClipboardHander : Service
             }
             catch when (cancelToken.IsCancellationRequested)
             {
-                Logger.Write(LOG_TAG, $"Error: {SERVICE_NAME} {nameof(HandleClipboard)}");
+                Logger.Write(LOG_TAG, $"Error: {SERVICE_NAME} {nameof(HandleClipboard)} Cancelled");
+            }
+            catch (Exception ex)
+            {
+                Logger.Write(LOG_TAG, $"Error: {SERVICE_NAME} {nameof(HandleClipboard)} {ex.Message}");
             }
         }
     }

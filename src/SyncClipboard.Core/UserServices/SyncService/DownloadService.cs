@@ -435,8 +435,6 @@ public class DownloadService : Service
         }
         finally
         {
-            _toastReporter?.CancelSicent();
-            _toastReporter = null;
             _trayIcon.StopAnimation();
             _downServiceChangingLocal = false;
             _messenger.Send(profile, SyncService.PULL_STOP_ENENT_NAME);
@@ -480,11 +478,12 @@ public class DownloadService : Service
             await _localClipboardSetter.Set(remoteProfile, cancelToken, false);
             _localProfileCache = remoteProfile;
             await _logger.WriteAsync(SERVICE_NAME, "Success set Local clipboard with remote profile: " + remoteProfile.ShortDisplayText);
+
+            await Task.Delay(TimeSpan.FromMilliseconds(50), cancelToken);   // 设置本地剪贴板可能有延迟，延迟发送事件
             if (_syncConfig.NotifyOnDownloaded)
             {
                 _clipboardNotificationHelper.Notify(remoteProfile, cancelToken);
             }
-            await Task.Delay(TimeSpan.FromMilliseconds(50), cancelToken);   // 设置本地剪贴板可能有延迟，延迟发送事件
         }
     }
 
@@ -514,6 +513,11 @@ public class DownloadService : Service
                 _trayIcon.SetStatusString(SERVICE_NAME, string.Format(I18n.Strings.UploadFailedStatus, i + 1, ex.Message), true);
                 await _logger.WriteAsync(LOG_TAG, $"Download attempt {i + 1} failed: {ex.Message}");
                 await Task.Delay(TimeSpan.FromSeconds(_syncConfig.IntervalTime), cancelToken);
+            }
+            finally
+            {
+                _toastReporter?.CancelSicent();
+                _toastReporter = null;
             }
         }
     }
