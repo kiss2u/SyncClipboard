@@ -55,6 +55,7 @@ public sealed partial class HistoryWindow : Window, IWindow
         AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Collapsed;
         this.SetTitleBarButtonForegroundColor();
         _TitleBar.Loaded += (_, _) => SetNonClientPointerSource();
+        _FilterSelectorBar.Loaded += (_, _) => DisableSelectorBarScrollBars();
 
         this.AppWindow.Resize(new SizeInt32(_viewModel.Width, _viewModel.Height));
         this.SizeChanged += HistoryWindow_SizeChanged;
@@ -529,6 +530,21 @@ public sealed partial class HistoryWindow : Window, IWindow
     {
         // 事件继续传递会导致搜索框失去焦点
         e.Handled = true;
+    }
+
+    /// <summary>
+    /// Workaround for WinUI3 ScrollView layout cycle bug (https://github.com/microsoft/microsoft-ui-xaml/issues/11040).
+    /// 在 150% 等非整除 DPI 下，SelectorBar 内部 ScrollView 的 PART_ScrollBarsSeparator 可见性在
+    /// Arrange 阶段反复切换（DesiredSize 在 34.666668px 和 40px 间振荡），耗尽 8 次布局迭代预算后
+    /// 崩溃并抛出 AG_E_LAYOUT_CYCLE。禁用竖向滚动条可消除分隔符的触发条件，振荡消除。
+    /// </summary>
+    private void DisableSelectorBarScrollBars()
+    {
+        var scrollView = FindDescendant<ScrollView>(_FilterSelectorBar);
+        if (scrollView != null)
+        {
+            scrollView.VerticalScrollBarVisibility = ScrollingScrollBarVisibility.Hidden;
+        }
     }
 
     private void SetNonClientPointerSource()

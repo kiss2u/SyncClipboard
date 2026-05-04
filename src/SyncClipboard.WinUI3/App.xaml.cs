@@ -32,6 +32,10 @@ namespace SyncClipboard.WinUI3
         {
             UnhandledException += App_UnhandledException;
             this.InitializeComponent();
+#if DEBUG
+            // 需要开启：项目属性-调试-常规-启用本机代码调试
+            this.DebugSettings.LayoutCycleTracingLevel = Microsoft.UI.Xaml.LayoutCycleTracingLevel.High;
+#endif
         }
 
         internal void ExitApp()
