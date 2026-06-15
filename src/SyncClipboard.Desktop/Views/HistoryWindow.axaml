@@ -200,7 +200,8 @@
                         <Grid MinHeight="10"
                               ColumnDefinitions="Auto, *, Auto, Auto"
                               Background="Transparent"
-                              Opacity="{Binding SyncState, Converter={x:Static vc:FuncConverter.SyncStateToOpacity}}">
+                              Opacity="{Binding SyncState, Converter={x:Static vc:FuncConverter.SyncStateToOpacity}}"
+                              PointerPressed="Grid_PointerPressed">
                             <Grid.ContextFlyout>
                                 <ui:FAMenuFlyout Opening="ItemContextFlyout_Opening" />
                             </Grid.ContextFlyout>

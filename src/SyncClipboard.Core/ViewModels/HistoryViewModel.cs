@@ -655,6 +655,12 @@ public partial class HistoryViewModel : ObservableObject
                 case Key.End:
                     ScrollToBottom();
                     return true;
+                case Key.S:
+                    ToggleStarForSelectedItem();
+                    return true;
+                case Key.Delete:
+                    DeleteSelectedItem();
+                    return true;
             }
         }
 
@@ -686,6 +692,30 @@ public partial class HistoryViewModel : ObservableObject
             default:
                 return false;
         }
+    }
+
+    private async void ToggleStarForSelectedItem()
+    {
+        var count = ((ICollection<HistoryRecordVM>)HistoryItems).Count;
+        if (SelectedIndex < 0 || SelectedIndex >= count)
+            return;
+
+        var selectedItem = ((IList<HistoryRecordVM>)HistoryItems)[SelectedIndex];
+        if (selectedItem == null) return;
+
+        await ChangeStarStatus(selectedItem);
+    }
+
+    private async void DeleteSelectedItem()
+    {
+        var count = ((ICollection<HistoryRecordVM>)HistoryItems).Count;
+        if (SelectedIndex < 0 || SelectedIndex >= count)
+            return;
+
+        var selectedItem = ((IList<HistoryRecordVM>)HistoryItems)[SelectedIndex];
+        if (selectedItem == null) return;
+
+        await DeleteItem(selectedItem);
     }
 
     private async void HandleEnterKey(bool isAltPressed)

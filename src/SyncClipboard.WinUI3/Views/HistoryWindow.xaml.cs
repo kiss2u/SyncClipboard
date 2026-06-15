@@ -355,6 +355,18 @@ public sealed partial class HistoryWindow : Window, IWindow
             _ListView.SelectedValue = clickedItem;
             _historyItemEvents.Reset();
         }
+
+        // 鼠标中键：复制并粘贴
+        if (e.Pointer.PointerDeviceType == PointerDeviceType.Mouse)
+        {
+            var properties = e.GetCurrentPoint(sender as UIElement).Properties;
+            if (properties?.IsMiddleButtonPressed == true)
+            {
+                _ = _viewModel.CopyToClipboard(clickedItem, true, CancellationToken.None);
+                return;
+            }
+        }
+
         _historyItemEvents.TriggerOriginalEvent();
     }
 

@@ -472,6 +472,8 @@
     <value>Ctrl+F: Focus search box
 Ctrl+Home: Scroll to top
 Ctrl+End: Scroll to bottom
+Ctrl+S: Toggle star
+Ctrl+Delete: Delete item
 ↑/↓: Navigate items
 Tab/Shift+Tab: Switch filters
 Enter: Copy and paste
@@ -481,7 +483,8 @@ Esc: Close panel</value>
   <data name="HistoryWindowMouseList" xml:space="preserve">
     <value>Single click: Select item
 Double click item: Copy to clipboard
-Double click image: View full image</value>
+Double click image: View full image
+Middle click: Copy and paste</value>
   </data>
   <data name="ClearLocalHistory" xml:space="preserve">
     <value>Clear All Local History</value>

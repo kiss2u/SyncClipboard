@@ -305,6 +305,27 @@ public partial class HistoryWindow : Window, IWindow
         _viewModel.HandleItemDoubleClick(record);
     }
 
+    private void Grid_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        var clickedItem = ((Grid?)sender)?.DataContext as HistoryRecordVM;
+        if (clickedItem == null)
+        {
+            return;
+        }
+
+        // 鼠标中键：复制并粘贴
+        if (e.Pointer.Type == PointerType.Mouse)
+        {
+            var properties = e.GetCurrentPoint((Grid?)sender!).Properties;
+            if (properties.IsMiddleButtonPressed)
+            {
+                e.Handled = true;
+                _ = _viewModel.CopyToClipboard(clickedItem, true, CancellationToken.None);
+                return;
+            }
+        }
+    }
+
     private void Image_DoubleTapped(object? sender, TappedEventArgs e)
     {
         e.Handled = true;

@@ -1339,6 +1339,8 @@ namespace SyncClipboard.Core.I18n {
         ///   查找类似 Ctrl+F: Focus search box
         ///Ctrl+Home: Scroll to top
         ///Ctrl+End: Scroll to bottom
+        ///Ctrl+S: Toggle star
+        ///Ctrl+Delete: Delete item
         ///↑/↓: Navigate items
         ///Tab/Shift+Tab: Switch filters
         ///Enter: Copy and paste
@@ -1363,7 +1365,8 @@ namespace SyncClipboard.Core.I18n {
         /// <summary>
         ///   查找类似 Single click: Select item
         ///Double click item: Copy to clipboard
-        ///Double click image: View full image 的本地化字符串。
+        ///Double click image: View full image
+        ///Middle click: Copy and paste 的本地化字符串。
         /// </summary>
         public static string HistoryWindowMouseList {
             get {

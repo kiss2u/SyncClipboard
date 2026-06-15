@@ -473,6 +473,8 @@
 ↑/↓：导航项目
 Ctrl+Home：滚动到顶部
 Ctrl+End：滚动到底部
+Ctrl+S：切换收藏
+Ctrl+Delete：删除项目
 Tab/Shift+Tab：切换筛选器
 Enter：复制并粘贴
 Alt+Enter：仅复制
@@ -481,7 +483,8 @@ Esc：关闭面板</value>
   <data name="HistoryWindowMouseList" xml:space="preserve">
     <value>单击：选择项目
 双击项目：复制到剪贴板
-双击图片：查看完整图片</value>
+双击图片：查看完整图片
+单击中键：复制并粘贴</value>
   </data>
   <data name="ClearLocalHistory" xml:space="preserve">
     <value>清空本地历史记录</value>
