@@ -16,6 +16,7 @@ using SyncClipboard.Core.Utilities.Keyboard;
 using SyncClipboard.Core.Utilities.Runner;
 using SyncClipboard.Core.ViewModels.Sub;
 using System.Threading.Channels;
+using Timer = System.Timers.Timer;
 
 namespace SyncClipboard.Core.ViewModels;
 
@@ -57,6 +58,8 @@ public partial class HistoryViewModel : ObservableObject
 
     private Channel<TransferTask> _updateTaskQueue = Channel.CreateUnbounded<TransferTask>();
     private Task? _queueConsumerTask;
+
+    private readonly Timer _relativeTimeTimer;
 
     public HistoryViewModel(
         HistoryManager historyManager,
@@ -104,6 +107,11 @@ public partial class HistoryViewModel : ObservableObject
         viewController = allHistoryItems.CreateView(x => x);
         HistoryItems = viewController.ToNotifyCollectionChanged();
         ApplyFilter();
+
+        _relativeTimeTimer = new Timer(60000); // 1分钟
+        _relativeTimeTimer.Elapsed += OnRelativeTimeTimerElapsed;
+        _relativeTimeTimer.AutoReset = true;
+        _relativeTimeTimer.Start();
     }
 
     private void OnHistoryConfigChanged(RuntimeHistoryConfig cfg)
@@ -1124,6 +1132,22 @@ public partial class HistoryViewModel : ObservableObject
         {
             window.Close();
         }
+    }
+
+    private void UpdateAllRelativeTimes()
+    {
+        _threadDispatcher.RunOnMainThreadAsync(() =>
+        {
+            foreach (var item in allHistoryItems)
+            {
+                item.UpdateRelativeTime();
+            }
+        });
+    }
+
+    private void OnRelativeTimeTimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        UpdateAllRelativeTimes();
     }
 
     public void HandleItemDoubleClick(HistoryRecordVM record)

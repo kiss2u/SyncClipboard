@@ -1038,4 +1038,25 @@ Esc：关闭面板</value>
   <data name="FollowMousePosition" xml:space="preserve">
     <value>跟随鼠标位置</value>
   </data>
+  <data name="SecondsAgo" xml:space="preserve">
+    <value>{0}秒前</value>
+  </data>
+  <data name="JustNow" xml:space="preserve">
+    <value>刚刚</value>
+  </data>
+  <data name="MinutesAgo" xml:space="preserve">
+    <value>{0}分钟前</value>
+  </data>
+  <data name="HoursAgo" xml:space="preserve">
+    <value>{0}小时前</value>
+  </data>
+  <data name="DaysAgo" xml:space="preserve">
+    <value>{0}天前</value>
+  </data>
+  <data name="MonthsAgo" xml:space="preserve">
+    <value>{0}个月前</value>
+  </data>
+  <data name="YearsAgo" xml:space="preserve">
+    <value>{0}年前</value>
+  </data>
 </root>

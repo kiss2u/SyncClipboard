@@ -113,7 +113,10 @@
                 <ToggleButton ToolTip.Tip="{x:Static i18n:Strings.WindowTopmost}" Classes="FontIcon" IsChecked="{Binding IsTopmost, Mode=TwoWay}">
                     <ui:FontIcon Glyph="&#xE840;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
                 </ToggleButton>
-                <Button x:Name="_MenuButton" Width="24" Height="24" VerticalAlignment="Center">
+                <Button x:Name="_MenuButton"
+                        Width="24"
+                        Height="24"
+                        VerticalAlignment="Center">
                     <ui:FontIcon Glyph="&#xE10C;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
                     <Button.Flyout>
                         <ui:FAMenuFlyout>
@@ -152,7 +155,7 @@
                          VerticalContentAlignment="Center"
                          Text="{Binding SearchText}"
                          Watermark="{x:Static i18n:Strings.HistorySearchPlaceholder}" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <StackPanel Grid.Column="1" VerticalAlignment="Top" Orientation="Horizontal">
                     <Button Width="32"
                             Height="32"
                             Command="{Binding RefreshCommand}"
@@ -218,64 +221,72 @@
                                            Text="{Binding DetailText}"
                                            IsVisible="{Binding #_HistoryWindow.ViewModel.ShowDetail}" />
                             </StackPanel>
-                            <StackPanel Grid.Column="2"
-                                        Margin="5,0,0,0"
-                                        Orientation="Horizontal"
-                                        Spacing="2">
-                                <Button IsVisible="{Binding HasError}">
-                                    <Button.Flyout>
-                                        <Flyout>
-                                            <TextBlock Text="{Binding ErrorMessage}" />
-                                        </Flyout>
-                                    </Button.Flyout>
-                                    <ui:FontIcon Glyph="&#xE783;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                                </Button>
-                                <!--  Download / Upload cluster (sync buttons container)  -->
-                                <StackPanel Orientation="Horizontal" Spacing="2" IsVisible="{Binding #_HistoryWindow.ViewModel.EnableSyncHistory}">
-                                    <!--  Download button  -->
-                                    <Button Command="{Binding #_HistoryWindow.ViewModel.DownloadRemoteProfileCommand}" CommandParameter="{Binding .}" IsVisible="{Binding ShowDownloadButton}">
-                                        <ui:FontIcon Glyph="&#xE896;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                            <Border Grid.Column="2"
+                                    Height="40"
+                                    VerticalAlignment="Top"
+                                    Padding="12,0,0,0">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock Text="{Binding RelativeTime}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0"
+                                               Opacity="0.6"
+                                               FontSize="12"
+                                               ToolTip.Tip="{Binding DetailText}" />
+                                    <Button IsVisible="{Binding HasError}">
+                                        <Button.Flyout>
+                                            <Flyout>
+                                                <TextBlock Text="{Binding ErrorMessage}" />
+                                            </Flyout>
+                                        </Button.Flyout>
+                                        <ui:FontIcon Glyph="&#xE783;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
                                     </Button>
-                                    <!--  Cancel download button with progress ring  -->
-                                    <Button Command="{Binding #_HistoryWindow.ViewModel.CancelDownloadCommand}"
-                                            CommandParameter="{Binding .}"
-                                            IsVisible="{Binding ShowDownloadProgress}"
-                                            ToolTip.Tip="{x:Static i18n:Strings.CancelDownload}">
-                                        <ui:ProgressRing Width="16"
-                                                         Height="16"
-                                                         IsIndeterminate="{Binding IsDownloadPending}"
-                                                         IsActive="True"
-                                                         Value="{Binding DownloadProgress}" />
+                                    <!--  Download / Upload cluster (sync buttons container)  -->
+                                    <StackPanel Orientation="Horizontal" Spacing="2" IsVisible="{Binding #_HistoryWindow.ViewModel.EnableSyncHistory}">
+                                        <!--  Download button  -->
+                                        <Button Command="{Binding #_HistoryWindow.ViewModel.DownloadRemoteProfileCommand}" CommandParameter="{Binding .}" IsVisible="{Binding ShowDownloadButton}">
+                                            <ui:FontIcon Glyph="&#xE896;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                                        </Button>
+                                        <!--  Cancel download button with progress ring  -->
+                                        <Button Command="{Binding #_HistoryWindow.ViewModel.CancelDownloadCommand}"
+                                                CommandParameter="{Binding .}"
+                                                IsVisible="{Binding ShowDownloadProgress}"
+                                                ToolTip.Tip="{x:Static i18n:Strings.CancelDownload}">
+                                            <ui:ProgressRing Width="16"
+                                                             Height="16"
+                                                             IsIndeterminate="{Binding IsDownloadPending}"
+                                                             IsActive="True"
+                                                             Value="{Binding DownloadProgress}" />
+                                        </Button>
+                                        <!--  Upload button  -->
+                                        <Button Command="{Binding #_HistoryWindow.ViewModel.UploadLocalHistoryCommand}" CommandParameter="{Binding .}" IsVisible="{Binding ShowUploadButton}">
+                                            <ui:FontIcon Glyph="&#xE898;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                                        </Button>
+                                        <!--  Cancel upload button with progress ring  -->
+                                        <Button Command="{Binding #_HistoryWindow.ViewModel.CancelUploadCommand}"
+                                                CommandParameter="{Binding .}"
+                                                IsVisible="{Binding ShowUploadProgress}"
+                                                ToolTip.Tip="{x:Static i18n:Strings.CancelUpload}">
+                                            <ui:ProgressRing Width="16"
+                                                             Height="16"
+                                                             IsIndeterminate="{Binding IsUploadPending}"
+                                                             IsActive="{Binding IsUploading}"
+                                                             Value="{Binding UploadProgress}" />
+                                        </Button>
+                                    </StackPanel>
+                                    <Button Click="CopyButtonClicked" IsVisible="{Binding IsLocalFileReady}">
+                                        <ui:FontIcon Glyph="&#xE8C8;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
                                     </Button>
-                                    <!--  Upload button  -->
-                                    <Button Command="{Binding #_HistoryWindow.ViewModel.UploadLocalHistoryCommand}" CommandParameter="{Binding .}" IsVisible="{Binding ShowUploadButton}">
-                                        <ui:FontIcon Glyph="&#xE898;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                                    <Button Click="PasteButtonClicked" IsVisible="{Binding IsLocalFileReady}">
+                                        <ui:FontIcon Glyph="&#xE77F;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
                                     </Button>
-                                    <!--  Cancel upload button with progress ring  -->
-                                    <Button Command="{Binding #_HistoryWindow.ViewModel.CancelUploadCommand}"
-                                            CommandParameter="{Binding .}"
-                                            IsVisible="{Binding ShowUploadProgress}"
-                                            ToolTip.Tip="{x:Static i18n:Strings.CancelUpload}">
-                                        <ui:ProgressRing Width="16"
-                                                         Height="16"
-                                                         IsIndeterminate="{Binding IsUploadPending}"
-                                                         IsActive="{Binding IsUploading}"
-                                                         Value="{Binding UploadProgress}" />
+                                    <Button Command="{Binding #_HistoryWindow.ViewModel.ChangeStarStatusCommand}" CommandParameter="{Binding .}">
+                                        <ui:FontIcon Glyph="{Binding Stared, Converter={x:Static vc:FuncConverter.ToStarIcon}}" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                                    </Button>
+                                    <Button Command="{Binding #_HistoryWindow.ViewModel.DeleteItemCommand}" CommandParameter="{Binding .}">
+                                        <ui:FontIcon Glyph="&#xE74D;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
                                     </Button>
                                 </StackPanel>
-                                <Button Click="CopyButtonClicked" IsVisible="{Binding IsLocalFileReady}">
-                                    <ui:FontIcon Glyph="&#xE8C8;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                                </Button>
-                                <Button Click="PasteButtonClicked" IsVisible="{Binding IsLocalFileReady}">
-                                    <ui:FontIcon Glyph="&#xE77F;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                                </Button>
-                                <Button Command="{Binding #_HistoryWindow.ViewModel.ChangeStarStatusCommand}" CommandParameter="{Binding .}">
-                                    <ui:FontIcon Glyph="{Binding Stared, Converter={x:Static vc:FuncConverter.ToStarIcon}}" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                                </Button>
-                                <Button Command="{Binding #_HistoryWindow.ViewModel.DeleteItemCommand}" CommandParameter="{Binding .}">
-                                    <ui:FontIcon Glyph="&#xE74D;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                                </Button>
-                            </StackPanel>
+                            </Border>
                             <Border Grid.Column="3"
                                     Width="2"
                                     Margin="4,0,4,0"

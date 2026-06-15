@@ -25,6 +25,7 @@ public partial class HistoryRecordVM : ObservableObject
             record.IsLocalFileReady ? SyncStatus.Synced : SyncStatus.ServerOnly;
         isLocalFileReady = record.IsLocalFileReady;
         previewImage = isLocalFileReady && filePath.Length > 0 ? filePath[0] : null;
+        UpdateRelativeTime();
     }
 
     private HistoryRecordVM() : this(new HistoryRecord())
@@ -45,16 +46,73 @@ public partial class HistoryRecordVM : ObservableObject
     public long Size { get; set; }
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DetailText))]
+    [NotifyPropertyChangedFor(nameof(RelativeTime))]
     private DateTime timestamp;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DetailText))]
+    [NotifyPropertyChangedFor(nameof(RelativeTime))]
     private DateTime lastAccessed;
     [ObservableProperty]
     private bool stared;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DetailText))]
+    [NotifyPropertyChangedFor(nameof(RelativeTime))]
+    [NotifyPropertyChangedFor(nameof(FullDateTime))]
     private bool sortByLastAccessed;
+
+    partial void OnSortByLastAccessedChanged(bool oldValue, bool newValue) => UpdateRelativeTime();
+
+    [ObservableProperty]
+    private string relativeTime = string.Empty;
+
+    public string FullDateTime
+    {
+        get
+        {
+            var time = SortByLastAccessed ? LastAccessed : Timestamp;
+            var localTime = time.Kind == DateTimeKind.Utc ? time.ToLocalTime() : time;
+            return localTime.ToString("yyyy-MM-dd HH:mm:ss");
+        }
+    }
+
+    public void UpdateRelativeTime()
+    {
+        var time = SortByLastAccessed ? LastAccessed : Timestamp;
+        var localTime = time.Kind == DateTimeKind.Utc ? time.ToLocalTime() : time;
+        RelativeTime = FormatRelativeTime(localTime);
+    }
+
+    private static string FormatRelativeTime(DateTime time)
+    {
+        var now = DateTime.Now;
+        var diff = now - time;
+
+        if (diff.TotalSeconds < 60)
+        {
+            return Strings.JustNow;
+        }
+        else if (diff.TotalMinutes < 60)
+        {
+            return string.Format(Strings.MinutesAgo, (int)diff.TotalMinutes);
+        }
+        else if (diff.TotalHours < 24)
+        {
+            return string.Format(Strings.HoursAgo, (int)diff.TotalHours);
+        }
+        else if (diff.TotalDays < 30)
+        {
+            return string.Format(Strings.DaysAgo, (int)diff.TotalDays);
+        }
+        else if (diff.TotalDays < 365)
+        {
+            return string.Format(Strings.MonthsAgo, (int)(diff.TotalDays / 30));
+        }
+        else
+        {
+            return string.Format(Strings.YearsAgo, (int)(diff.TotalDays / 365));
+        }
+    }
 
     public string DetailText
     {

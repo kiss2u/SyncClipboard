@@ -668,6 +668,15 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 {0}d 的本地化字符串。
+        /// </summary>
+        public static string DaysAgo {
+            get {
+                return ResourceManager.GetString("DaysAgo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Auto detect 的本地化字符串。
         /// </summary>
         public static string DefaultLanguage {
@@ -1399,6 +1408,15 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 {0}h 的本地化字符串。
+        /// </summary>
+        public static string HoursAgo {
+            get {
+                return ResourceManager.GetString("HoursAgo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Icon Missing Detected 的本地化字符串。
         /// </summary>
         public static string IconMissingDetected {
@@ -1467,6 +1485,15 @@ namespace SyncClipboard.Core.I18n {
         public static string ItsLatestVersion {
             get {
                 return ResourceManager.GetString("ItsLatestVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Just now 的本地化字符串。
+        /// </summary>
+        public static string JustNow {
+            get {
+                return ResourceManager.GetString("JustNow", resourceCulture);
             }
         }
         
@@ -1602,6 +1629,24 @@ namespace SyncClipboard.Core.I18n {
         public static string MaxItemCountDescription {
             get {
                 return ResourceManager.GetString("MaxItemCountDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 {0}m 的本地化字符串。
+        /// </summary>
+        public static string MinutesAgo {
+            get {
+                return ResourceManager.GetString("MinutesAgo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 {0}mo 的本地化字符串。
+        /// </summary>
+        public static string MonthsAgo {
+            get {
+                return ResourceManager.GetString("MonthsAgo", resourceCulture);
             }
         }
         
@@ -2178,6 +2223,15 @@ namespace SyncClipboard.Core.I18n {
         public static string ScrollToTopOnReopen {
             get {
                 return ResourceManager.GetString("ScrollToTopOnReopen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 {0}s 的本地化字符串。
+        /// </summary>
+        public static string SecondsAgo {
+            get {
+                return ResourceManager.GetString("SecondsAgo", resourceCulture);
             }
         }
         
@@ -2799,6 +2853,15 @@ namespace SyncClipboard.Core.I18n {
         public static string WindowTopmost {
             get {
                 return ResourceManager.GetString("WindowTopmost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 {0}y 的本地化字符串。
+        /// </summary>
+        public static string YearsAgo {
+            get {
+                return ResourceManager.GetString("YearsAgo", resourceCulture);
             }
         }
         
