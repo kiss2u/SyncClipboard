@@ -1,0 +1,91 @@
+<UserControl x:Class="SyncClipboard.Desktop.Controls.PreviewPanel"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="using:SyncClipboard.Desktop.Views"
+             xmlns:vc="using:SyncClipboard.Desktop.ValueConverters"
+             xmlns:i18n="using:SyncClipboard.Core.I18n"
+             xmlns:vm="using:SyncClipboard.Core.ViewModels"
+             xmlns:vms="using:SyncClipboard.Core.ViewModels.Sub"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Name="_PreviewPanel"
+             xmlns:controls="using:SyncClipboard.Desktop.Controls">
+
+    <Grid MinWidth="300"
+          Background="Transparent"
+          SizeChanged="PreviewPanel_SizeChanged"
+          RowDefinitions="Auto, *">
+        <Border Grid.Row="0"
+                Background="Transparent"
+                Padding="12,4"
+                IsVisible="{Binding #_PreviewPanel.SelectedItem, Converter={x:Static vc:FuncConverter.NotNullToVisible}}">
+            <Grid ColumnDefinitions="Auto, Auto, Auto, Auto, *">
+                <TextBlock Grid.Column="0"
+                           VerticalAlignment="Center"
+                           Text="{Binding #_PreviewPanel.SelectedItem.Type, Converter={x:Static vc:FuncConverter.ProfileTypeToString}}"
+                           FontSize="12"
+                           Opacity="0.7"
+                           Margin="0,0,8,0" />
+                <TextBlock Grid.Column="1"
+                           VerticalAlignment="Center"
+                           Text="{Binding #_PreviewPanel.SelectedItem, Converter={x:Static vc:FuncConverter.GetRecordSize}}"
+                           FontSize="12"
+                           Opacity="0.6"
+                           Margin="0,0,8,0" />
+                <TextBlock Grid.Column="2"
+                           VerticalAlignment="Center"
+                           Text="{Binding #_PreviewPanel.SelectedItem.RelativeTime}"
+                           FontSize="12"
+                           Opacity="0.6"
+                           Margin="0,0,8,0"
+                           ToolTip.Tip="{Binding #_PreviewPanel.SelectedItem.FullDateTime}" />
+                <TextBlock Grid.Column="3"
+                           x:Name="_SyncedText"
+                           VerticalAlignment="Center"
+                           Text="{x:Static i18n:Strings.Synced}"
+                           FontSize="12"
+                           Opacity="0.6" />
+                <views:RecordControlBar Grid.Column="4"
+                                        x:Name="_PreviewControlBar"
+                                        HorizontalAlignment="Right"
+                                        Record="{Binding #_PreviewPanel.SelectedItem}"
+                                        ViewModel="{Binding #_PreviewPanel.ViewModel}" />
+            </Grid>
+        </Border>
+        <Grid Grid.Row="1">
+            <TextBlock x:Name="_PreviewPlaceholder"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Opacity="0.5"
+                       Text="{x:Static i18n:Strings.SelectRecordToPreview}"
+                       IsVisible="{Binding #_PreviewPanel.SelectedItem, Converter={x:Static vc:FuncConverter.NullToVisible}}" />
+            <ScrollViewer x:Name="_PreviewScrollViewer"
+                          Padding="12,0"
+                          VerticalScrollBarVisibility="Auto">
+                <ScrollViewer.IsVisible>
+                    <MultiBinding Converter="{x:Static vc:FuncConverter.ShowTextPreviewMulti}">
+                        <Binding Path="#_PreviewPanel.SelectedItem" />
+                        <Binding Path="#_PreviewPanel.SelectedItem.PreviewImage" />
+                    </MultiBinding>
+                </ScrollViewer.IsVisible>
+                <SelectableTextBlock x:Name="_PreviewTextBlock"
+                                     TextWrapping="Wrap"
+                                     DataContext="{Binding #_PreviewPanel.SelectedItem}"
+                                     Text="{Binding Text, x:DataType=vms:HistoryRecordVM}" />
+            </ScrollViewer>
+            <Image x:Name="_PreviewImage"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Stretch="None"
+                   DoubleTapped="PreviewImage_DoubleTapped">
+                <Image.IsVisible>
+                    <MultiBinding Converter="{x:Static vc:FuncConverter.ShowImagePreviewMulti}">
+                        <Binding Path="#_PreviewPanel.SelectedItem" />
+                        <Binding Path="#_PreviewPanel.SelectedItem.PreviewImage" />
+                    </MultiBinding>
+                </Image.IsVisible>
+            </Image>
+        </Grid>
+    </Grid>
+</UserControl>

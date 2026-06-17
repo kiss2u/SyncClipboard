@@ -7,6 +7,8 @@ using SyncClipboard.Core.I18n;
 using SyncClipboard.Core.Models;
 using SyncClipboard.Core.ViewModels;
 using System;
+using SyncClipboard.Shared.Profiles;
+using SyncClipboard.Core.ViewModels.Sub;
 
 namespace SyncClipboard.WinUI3.ValueConverters;
 
@@ -32,6 +34,54 @@ internal static class ConvertMethod
         return !value;
     }
 
+    public static Visibility ObjectToVisibility(object? value)
+    {
+        return value != null ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public static Visibility NullToVisibility(object? value)
+    {
+        return value == null ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public static Visibility TextPreviewVisibility(HistoryRecordVM? record, string? previewImage)
+    {
+        if (record == null)
+            return Visibility.Collapsed;
+        return record.Type != ProfileType.Image || previewImage == null
+            ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public static Visibility ImagePreviewVisibility(HistoryRecordVM? record, string? previewImage)
+    {
+        if (record == null)
+            return Visibility.Collapsed;
+        return record.Type == ProfileType.Image && previewImage != null
+            ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public static string ProfileTypeToString(ProfileType? type)
+    {
+        if (type == null)
+            return string.Empty;
+        return Converter.ProfileTypeToLocalizedString(type.Value);
+    }
+
+    public static ProfileType? GetProfileType(HistoryRecordVM? record)
+    {
+        return record?.Type;
+    }
+
+    public static string GetRelativeTime(HistoryRecordVM? record)
+    {
+        return record?.RelativeTime ?? string.Empty;
+    }
+
+    public static string GetText(HistoryRecordVM? record)
+    {
+        return record?.Text ?? string.Empty;
+    }
+
     public static InfoBarSeverity ConvertSeverity(Severity severity)
     {
         return severity switch
@@ -52,6 +102,11 @@ internal static class ConvertMethod
         }
 
         return Converter.LimitUIText(input);
+    }
+
+    public static string GetRecordSize(HistoryRecordVM? record)
+    {
+        return Converter.GetRecordSize(record);
     }
 
     public static string ProfileTypeToFontIcon(ProfileType type)

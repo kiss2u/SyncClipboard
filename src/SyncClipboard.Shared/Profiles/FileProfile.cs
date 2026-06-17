@@ -202,9 +202,10 @@ public class FileProfile : Profile
             return null;
         }
 
+        var workingDir = CreateWorkingDir(persistentDir, Type, await GetHash(token));
         if (FullPath is null)
         {
-            return Path.Combine(CreateWorkingDir(persistentDir, Type, await GetHash(token)), FileName);
+            return Path.Combine(workingDir, FileName);
         }
 
         return FullPath;

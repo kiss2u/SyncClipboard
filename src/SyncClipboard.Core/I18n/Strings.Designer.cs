@@ -497,6 +497,15 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 Compact List When Preview 的本地化字符串。
+        /// </summary>
+        public static string CompactListWhenPreview {
+            get {
+                return ResourceManager.GetString("CompactListWhenPreview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Completely exit 的本地化字符串。
         /// </summary>
         public static string CompletelyExit {
@@ -1341,6 +1350,7 @@ namespace SyncClipboard.Core.I18n {
         ///Ctrl+End: Scroll to bottom
         ///Ctrl+S: Toggle star
         ///Ctrl+Delete: Delete item
+        ///Ctrl+P: Toggle preview panel
         ///↑/↓: Navigate items
         ///Tab/Shift+Tab: Switch filters
         ///Enter: Copy and paste
@@ -1924,6 +1934,24 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 Preview 的本地化字符串。
+        /// </summary>
+        public static string Preview {
+            get {
+                return ResourceManager.GetString("Preview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Preview Panel 的本地化字符串。
+        /// </summary>
+        public static string PreviewPanel {
+            get {
+                return ResourceManager.GetString("PreviewPanel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Process Name 的本地化字符串。
         /// </summary>
         public static string ProcessName {
@@ -2266,6 +2294,15 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 Select a record to preview 的本地化字符串。
+        /// </summary>
+        public static string SelectRecordToPreview {
+            get {
+                return ResourceManager.GetString("SelectRecordToPreview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Send notification after manually upload 的本地化字符串。
         /// </summary>
         public static string SendNotificationAfterManuallyUpload {
@@ -2329,11 +2366,11 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
-        ///   查找类似 Show Details 的本地化字符串。
+        ///   查找类似 Show Preview Panel 的本地化字符串。
         /// </summary>
-        public static string ShowDetail {
+        public static string ShowPreviewPanel {
             get {
-                return ResourceManager.GetString("ShowDetail", resourceCulture);
+                return ResourceManager.GetString("ShowPreviewPanel", resourceCulture);
             }
         }
         
@@ -2478,6 +2515,15 @@ namespace SyncClipboard.Core.I18n {
         public static string SyncContentControl {
             get {
                 return ResourceManager.GetString("SyncContentControl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Synced 的本地化字符串。
+        /// </summary>
+        public static string Synced {
+            get {
+                return ResourceManager.GetString("Synced", resourceCulture);
             }
         }
         

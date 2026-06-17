@@ -474,6 +474,7 @@ Ctrl+Home: Scroll to top
 Ctrl+End: Scroll to bottom
 Ctrl+S: Toggle star
 Ctrl+Delete: Delete item
+Ctrl+P: Toggle preview panel
 ↑/↓: Navigate items
 Tab/Shift+Tab: Switch filters
 Enter: Copy and paste
@@ -947,8 +948,11 @@ This operation cannot be undone.</value>
   <data name="CancelUpload" xml:space="preserve">
     <value>Cancel Upload</value>
   </data>
-  <data name="ShowDetail" xml:space="preserve">
-    <value>Show Details</value>
+  <data name="ShowPreviewPanel" xml:space="preserve">
+    <value>Show Preview Panel</value>
+  </data>
+  <data name="CompactListWhenPreview" xml:space="preserve">
+    <value>Compact List When Preview</value>
   </data>
   <data name="FontScale" xml:space="preserve">
     <value>Font Scale</value>
@@ -1063,5 +1067,17 @@ This operation cannot be undone.</value>
   </data>
   <data name="YearsAgo" xml:space="preserve">
     <value>{0}y</value>
+  </data>
+  <data name="PreviewPanel" xml:space="preserve">
+    <value>Preview Panel</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="SelectRecordToPreview" xml:space="preserve">
+    <value>Select a record to preview</value>
+  </data>
+  <data name="Synced" xml:space="preserve">
+    <value>Synced</value>
   </data>
 </root>

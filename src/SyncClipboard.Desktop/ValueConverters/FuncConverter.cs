@@ -1,19 +1,88 @@
+using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using SyncClipboard.Core.I18n;
 using Avalonia.Media.Imaging;
 using FluentAvalonia.UI.Controls;
+using SyncClipboard.Core.I18n;
 using SyncClipboard.Core.Models;
-using System;
-using Avalonia;
 using SyncClipboard.Core.ViewModels;
+using SyncClipboard.Core.ViewModels.Sub;
+using System;
+using System.Collections.Generic;
 
 namespace SyncClipboard.Desktop.ValueConverters;
 
-public class FuncConverter
+public static class FuncConverter
 {
     public static FuncValueConverter<bool, bool> Not { get; } =
         new FuncValueConverter<bool, bool>(value => !value);
+
+    public static FuncValueConverter<object, bool> NotNullToVisible { get; } =
+        new FuncValueConverter<object, bool>(value => value != null);
+
+    public static FuncValueConverter<object, bool> NullToVisible { get; } =
+        new FuncValueConverter<object, bool>(value => value == null);
+
+    public static FuncValueConverter<HistoryRecordVM, bool> ShowImagePreview { get; } =
+        new FuncValueConverter<HistoryRecordVM, bool>(record =>
+            record != null && record.Type == ProfileType.Image && record.PreviewImage != null);
+
+    public static FuncValueConverter<HistoryRecordVM, bool> ShowTextPreview { get; } =
+        new FuncValueConverter<HistoryRecordVM, bool>(record =>
+            record != null && (record.Type != ProfileType.Image || record.PreviewImage == null));
+
+    /// <summary>
+    /// 多值转换器：根据 record 和 previewImage 判断是否显示图片预览
+    /// </summary>
+    public static IMultiValueConverter ShowImagePreviewMulti { get; } =
+        new FuncMultiValueConverter<object?, bool>(values =>
+        {
+            var valuesList = new List<object?>();
+            foreach (var v in values)
+            {
+                valuesList.Add(v);
+            }
+
+            if (valuesList.Count >= 2 &&
+                valuesList[0] is HistoryRecordVM record &&
+                valuesList[1] is string previewImage)
+            {
+                return record.Type == ProfileType.Image && previewImage != null;
+            }
+            return false;
+        });
+
+    /// <summary>
+    /// 多值转换器：根据 record 和 previewImage 判断是否显示文字预览
+    /// </summary>
+    public static IMultiValueConverter ShowTextPreviewMulti { get; } =
+        new FuncMultiValueConverter<object?, bool>(values =>
+        {
+            var valuesList = new List<object?>();
+            foreach (var v in values)
+            {
+                valuesList.Add(v);
+            }
+
+            if (valuesList.Count >= 2 &&
+                valuesList[0] is HistoryRecordVM record &&
+                valuesList[1] is string previewImage)
+            {
+                return record.Type != ProfileType.Image || previewImage == null;
+            }
+            return false;
+        });
+
+    public static FuncValueConverter<ProfileType?, string> ProfileTypeToString { get; } =
+        new FuncValueConverter<ProfileType?, string>(type =>
+        {
+            if (type == null)
+                return string.Empty;
+            return Converter.ProfileTypeToLocalizedString(type.Value);
+        });
+
+    public static FuncValueConverter<HistoryRecordVM, string> GetRecordSize { get; } =
+        new FuncValueConverter<HistoryRecordVM, string>(Converter.GetRecordSize);
 
     public static FuncValueConverter<Severity?, InfoBarSeverity> ConvertSeverity { get; } =
         new FuncValueConverter<Severity?, InfoBarSeverity>(severity => severity switch
@@ -106,5 +175,30 @@ public class FuncConverter
         new FuncValueConverter<SyncStatus, double>(state =>
         {
             return state == SyncStatus.ServerOnly ? 0.5 : 1.0;
+        });
+
+    /// <summary>
+    /// 多值转换器：当 showSyncState 为 true 且 showPreviewPanel 为 false 时返回 true
+    /// 用于同步状态颜色条的可见性控制
+    /// </summary>
+    public static IMultiValueConverter ShowSyncStatusIndicator { get; } =
+        new FuncMultiValueConverter<bool, bool>(values =>
+        {
+            var valuesList = new List<bool>();
+            foreach (var v in values)
+            {
+                if (v is bool b)
+                    valuesList.Add(b);
+                else
+                    valuesList.Add(false);
+            }
+
+            if (valuesList.Count >= 2)
+            {
+                var showSyncState = valuesList[0];
+                var showPreviewPanel = valuesList[1];
+                return showSyncState && !showPreviewPanel;
+            }
+            return false;
         });
 }

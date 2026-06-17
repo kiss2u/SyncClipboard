@@ -475,6 +475,7 @@ Ctrl+Home：滚动到顶部
 Ctrl+End：滚动到底部
 Ctrl+S：切换收藏
 Ctrl+Delete：删除项目
+Ctrl+P：切换预览面板
 Tab/Shift+Tab：切换筛选器
 Enter：复制并粘贴
 Alt+Enter：仅复制
@@ -945,8 +946,11 @@ Esc：关闭面板</value>
   <data name="CancelUpload" xml:space="preserve">
     <value>取消上传</value>
   </data>
-  <data name="ShowDetail" xml:space="preserve">
-    <value>显示详细信息</value>
+  <data name="ShowPreviewPanel" xml:space="preserve">
+    <value>显示预览面板</value>
+  </data>
+  <data name="CompactListWhenPreview" xml:space="preserve">
+    <value>预览时紧凑列表</value>
   </data>
   <data name="FontScale" xml:space="preserve">
     <value>字体缩放</value>
@@ -1061,5 +1065,17 @@ Esc：关闭面板</value>
   </data>
   <data name="YearsAgo" xml:space="preserve">
     <value>{0}年前</value>
+  </data>
+  <data name="PreviewPanel" xml:space="preserve">
+    <value>预览面板</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>预览</value>
+  </data>
+  <data name="SelectRecordToPreview" xml:space="preserve">
+    <value>选中记录预览</value>
+  </data>
+  <data name="Synced" xml:space="preserve">
+    <value>已同步</value>
   </data>
 </root>

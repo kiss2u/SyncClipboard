@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using ObservableCollections;
+using System.Collections.Specialized;
 using SyncClipboard.Core.Clipboard;
 using SyncClipboard.Core.Commons;
 using SyncClipboard.Core.Interfaces;
@@ -106,6 +107,7 @@ public partial class HistoryViewModel : ObservableObject
 
         viewController = allHistoryItems.CreateView(x => x);
         HistoryItems = viewController.ToNotifyCollectionChanged();
+        HistoryItems.CollectionChanged += OnHistoryItemsCollectionChanged;
         ApplyFilter();
 
         _relativeTimeTimer = new Timer(60000); // 1分钟
@@ -129,6 +131,19 @@ public partial class HistoryViewModel : ObservableObject
         else
         {
             historySyncServer = null;
+        }
+    }
+
+    private async void OnHistoryItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        // 当集合从空变为有数据时，自动选中第一项
+        if (e.Action == NotifyCollectionChangedAction.Add && SelectedIndex == -1 && e.NewItems?.Count > 0)
+        {
+            if (SelectedIndex == -1 && HistoryItems.Any())
+            {
+                await Task.Delay(1);
+                SelectedIndex = 0;
+            }
         }
     }
 
@@ -245,6 +260,7 @@ public partial class HistoryViewModel : ObservableObject
         {
             runtimeConfig.SetConfig(runtimeConfig.GetConfig<HistoryWindowConfig>() with { ShowSyncState = value });
             OnPropertyChanged(nameof(ShowSyncState));
+            OnPropertyChanged(nameof(ShowSyncStateIndicator));
         }
     }
 
@@ -274,16 +290,6 @@ public partial class HistoryViewModel : ObservableObject
             runtimeConfig.SetConfig(runtimeConfig.GetConfig<HistoryWindowConfig>() with { SortByLastAccessed = value });
             OnPropertyChanged(nameof(SortByLastAccessed));
             _ = Reload();
-        }
-    }
-
-    public bool ShowDetail
-    {
-        get => runtimeConfig.GetConfig<HistoryWindowConfig>().ShowDetail;
-        set
-        {
-            runtimeConfig.SetConfig(runtimeConfig.GetConfig<HistoryWindowConfig>() with { ShowDetail = value });
-            OnPropertyChanged(nameof(ShowDetail));
         }
     }
 
@@ -317,6 +323,58 @@ public partial class HistoryViewModel : ObservableObject
         get => runtimeConfig.GetConfig<HistoryWindowConfig>().FollowMousePosition;
         set => runtimeConfig.SetConfig(runtimeConfig.GetConfig<HistoryWindowConfig>() with { FollowMousePosition = value });
     }
+
+    public bool ShowPreviewPanel
+    {
+        get => runtimeConfig.GetConfig<HistoryWindowConfig>().ShowPreviewPanel;
+        set
+        {
+            runtimeConfig.SetConfig(runtimeConfig.GetConfig<HistoryWindowConfig>() with { ShowPreviewPanel = value });
+            OnPropertyChanged(nameof(ShowPreviewPanel));
+            OnPropertyChanged(nameof(IsCompactListMode));
+            OnPropertyChanged(nameof(CompactListMaxLines));
+            OnPropertyChanged(nameof(ShowSyncStateIndicator));
+        }
+    }
+
+    public int ListViewWidth
+    {
+        get => runtimeConfig.GetConfig<HistoryWindowConfig>().ListViewWidth;
+        set
+        {
+            if (value < 150) value = 150;
+            if (value == ListViewWidth) return;
+            runtimeConfig.SetConfig(runtimeConfig.GetConfig<HistoryWindowConfig>() with { ListViewWidth = value });
+            OnPropertyChanged(nameof(ListViewWidth));
+        }
+    }
+
+    public bool CompactListWhenPreview
+    {
+        get => runtimeConfig.GetConfig<HistoryWindowConfig>().CompactListWhenPreview;
+        set
+        {
+            runtimeConfig.SetConfig(runtimeConfig.GetConfig<HistoryWindowConfig>() with { CompactListWhenPreview = value });
+            OnPropertyChanged(nameof(CompactListWhenPreview));
+            OnPropertyChanged(nameof(IsCompactListMode));
+            OnPropertyChanged(nameof(CompactListMaxLines));
+        }
+    }
+
+    /// <summary>
+    /// 是否处于紧凑列表模式（CompactListWhenPreview 且 ShowPreviewPanel 都为 true）
+    /// </summary>
+    public bool IsCompactListMode => CompactListWhenPreview && ShowPreviewPanel;
+
+    /// <summary>
+    /// 是否显示同步状态指示器（ShowSyncState 为 true 且 ShowPreviewPanel 为 false）
+    /// </summary>
+    public bool ShowSyncStateIndicator => ShowSyncState && !ShowPreviewPanel;
+
+    /// <summary>
+    /// 紧凑模式下的最大行数：1 表示单行，0 表示无限制
+    /// </summary>
+    public int CompactListMaxLines => IsCompactListMode ? 1 : 0;
 
     public ScreenPosition? GetCaretPosition()
     {
@@ -370,9 +428,33 @@ public partial class HistoryViewModel : ObservableObject
     public double ListItemFontSize => FontScalePercent / 100.0 * 12.0;
 
     [RelayCommand]
-    public Task DeleteItem(HistoryRecordVM record)
+    public async Task DeleteItem(HistoryRecordVM record)
     {
-        return historyManager.DeleteHistory(record.ToHistoryRecord());
+        var count = ((ICollection<HistoryRecordVM>)HistoryItems).Count;
+        var currentIndex = SelectedIndex;
+
+        // 判断当前选中项是否是被删除的项
+        if (currentIndex >= 0 && currentIndex < count)
+        {
+            var selectedItem = ((IList<HistoryRecordVM>)HistoryItems)[currentIndex];
+            if (selectedItem == record)
+            {
+                // 先选择应该选中的条目
+                // 优先选择下一条，如果没有下一条则选择上一条
+                if (currentIndex < count - 1)
+                {
+                    // 有下一条，先选中下一条（删除后它会移动到当前索引位置）
+                    SelectedIndex = currentIndex + 1;
+                }
+                else if (currentIndex > 0)
+                {
+                    // 是最后一条且有上一条，先选中上一条
+                    SelectedIndex = currentIndex - 1;
+                }
+            }
+        }
+
+        await historyManager.DeleteHistory(record.ToHistoryRecord());
     }
 
     [RelayCommand]
@@ -401,6 +483,12 @@ public partial class HistoryViewModel : ObservableObject
     public void CtrlEnd()
     {
         ScrollToBottom();
+    }
+
+    [RelayCommand]
+    public void TogglePreviewPanel()
+    {
+        ShowPreviewPanel = !ShowPreviewPanel;
     }
 
     [RelayCommand]
@@ -660,6 +748,9 @@ public partial class HistoryViewModel : ObservableObject
                     return true;
                 case Key.Delete:
                     DeleteSelectedItem();
+                    return true;
+                case Key.P:
+                    ShowPreviewPanel = !ShowPreviewPanel;
                     return true;
             }
         }

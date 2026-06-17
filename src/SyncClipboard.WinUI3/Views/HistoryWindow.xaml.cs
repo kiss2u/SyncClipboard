@@ -16,13 +16,17 @@ using SyncClipboard.Core.Utilities;
 using SyncClipboard.Core.Utilities.Runner;
 using SyncClipboard.Core.ViewModels;
 using SyncClipboard.Core.ViewModels.Sub;
+using SyncClipboard.WinUI3.ValueConverters;
 using SyncClipboard.WinUI3.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Graphics;
+using Windows.Graphics.Imaging;
 using Windows.System;
 using Windows.UI.Core;
 using WinUIEx;
@@ -106,7 +110,9 @@ public sealed partial class HistoryWindow : Window, IWindow
         this.SetTopmost(_viewModel.IsTopmost);
 
         ApplyFontScale(_viewModel.FontScalePercent);
+        ApplyCompactListMaxLines(_viewModel.CompactListMaxLines);
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        UpdateListViewWidthForPreview(); // 初始化时设置ListView宽度
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -114,6 +120,80 @@ public sealed partial class HistoryWindow : Window, IWindow
         if (e.PropertyName == nameof(HistoryViewModel.FontScalePercent))
         {
             DispatcherQueue.TryEnqueue(() => ApplyFontScale(_viewModel.FontScalePercent));
+        }
+        else if (e.PropertyName == nameof(HistoryViewModel.ShowPreviewPanel))
+        {
+            DispatcherQueue.TryEnqueue(() => UpdateListViewWidthForPreview());
+        }
+        else if (e.PropertyName == nameof(HistoryViewModel.ListViewWidth) && _viewModel.ShowPreviewPanel)
+        {
+            DispatcherQueue.TryEnqueue(() => _ListView.Width = _viewModel.ListViewWidth);
+        }
+        else if (e.PropertyName == nameof(HistoryViewModel.CompactListMaxLines))
+        {
+            DispatcherQueue.TryEnqueue(() => ApplyCompactListMaxLines(_viewModel.CompactListMaxLines));
+        }
+    }
+
+    private void ApplyCompactListMaxLines(int maxLines)
+    {
+        ((CompactListProxy)_HistoryWindowGrid.Resources[nameof(CompactListProxy)]).SetMaxLines(maxLines);
+
+        // 切换模式时更新图片可见性
+        UpdateImageVisibilityInListView(maxLines == 0);
+    }
+
+    private void UpdateImageVisibilityInListView(bool visible)
+    {
+        // 遍历 ListView 的可视化树，找到所有 Image 元素并设置可见性
+        for (int i = 0; i < _ListView.Items.Count; i++)
+        {
+            var container = _ListView.ContainerFromIndex(i) as ListViewItem;
+            if (container != null)
+            {
+                var image = FindImageInContainer(container);
+                if (image != null && image.Source != null)
+                {
+                    image.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+                }
+            }
+        }
+    }
+
+    private Image? FindImageInContainer(DependencyObject container)
+    {
+        int childCount = VisualTreeHelper.GetChildrenCount(container);
+        for (int i = 0; i < childCount; i++)
+        {
+            var child = VisualTreeHelper.GetChild(container, i);
+            if (child is Image image)
+            {
+                return image;
+            }
+            var found = FindImageInContainer(child);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+        return null;
+    }
+
+    private void UpdateListViewWidthForPreview()
+    {
+        if (_viewModel.ShowPreviewPanel)
+        {
+            // 预览面板显示时，ListView固定宽度，预览面板填充剩余空间
+            _MainContentGrid.ColumnDefinitions[0].Width = new GridLength(0, GridUnitType.Auto);
+            _MainContentGrid.ColumnDefinitions[2].Width = new GridLength(1, GridUnitType.Star);
+            _ListView.Width = _viewModel.ListViewWidth;
+        }
+        else
+        {
+            // 预览面板关闭时，ListView填充整个Grid，预览面板列不占空间
+            _MainContentGrid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
+            _MainContentGrid.ColumnDefinitions[2].Width = new GridLength(0, GridUnitType.Auto);
+            _ListView.Width = double.NaN; // Auto
         }
     }
 
@@ -153,6 +233,18 @@ public sealed partial class HistoryWindow : Window, IWindow
                 centerX, centerY);
             _viewModel.Width = width;
             _viewModel.Height = height;
+
+            // 如果预览面板显示，确保预览面板至少300宽度
+            if (_viewModel.ShowPreviewPanel)
+            {
+                var maxWidth = (int)_MainContentGrid.ActualWidth - 300 - 2;
+                if (maxWidth < 150) maxWidth = 150;
+                if (_viewModel.ListViewWidth > maxWidth)
+                {
+                    _viewModel.ListViewWidth = maxWidth;
+                    _ListView.Width = maxWidth;
+                }
+            }
         }
         SetNonClientPointerSource();
     }
@@ -331,6 +423,14 @@ public sealed partial class HistoryWindow : Window, IWindow
     {
         if (sender is not Image image)
         {
+            return;
+        }
+
+        // 紧凑模式下不显示图片
+        var compactProxy = (CompactListProxy)_HistoryWindowGrid.Resources[nameof(CompactListProxy)];
+        if (compactProxy.IsCompact)
+        {
+            image.Visibility = Visibility.Collapsed;
             return;
         }
 
@@ -702,48 +802,102 @@ public sealed partial class HistoryWindow : Window, IWindow
     }
 
     private static readonly BoolToVisibilityConverter boolToVisibilityConverter = new();
+    private static readonly BoolToVisibilityNegateConverter boolToVisibilityNegateConverter = new();
+
     private void StatusBorderLoaded(object sender, RoutedEventArgs _)
     {
         if (sender is not Border border) return;
 
-        var visualbilityBinding = new Binding
+        // 直接绑定 ShowSyncStateIndicator（ViewModel 已组合两个条件）
+        var binding = new Binding
         {
             Source = _viewModel,
-            Path = new PropertyPath(nameof(HistoryViewModel.ShowSyncState)),
+            Path = new PropertyPath(nameof(HistoryViewModel.ShowSyncStateIndicator)),
             Converter = boolToVisibilityConverter,
             Mode = BindingMode.OneWay
         };
-
-        border.SetBinding(UIElement.VisibilityProperty, visualbilityBinding);
+        border.SetBinding(UIElement.VisibilityProperty, binding);
     }
 
-    private void SyncButtonsContainerLoaded(object sender, RoutedEventArgs _)
+    private void RecordControlBarLoaded(object sender, RoutedEventArgs _)
     {
-        if (sender is not StackPanel container) return;
+        if (sender is not RecordControlBar controlBar) return;
 
-        var syncButtonsBinding = new Binding
-        {
-            Source = _viewModel,
-            Path = new PropertyPath(nameof(HistoryViewModel.EnableSyncHistory)),
-            Converter = boolToVisibilityConverter,
-            Mode = BindingMode.OneWay
-        };
+        // 设置 ViewModel 绑定
+        controlBar.ViewModel = _viewModel;
 
-        container.SetBinding(UIElement.VisibilityProperty, syncButtonsBinding);
-    }
-
-    private void DetailTextBlockLoaded(object sender, RoutedEventArgs _)
-    {
-        if (sender is not TextBlock textBlock) return;
-
+        // 设置 Visibility 绑定（当 ShowPreviewPanel 为 true 时隐藏）
         var visibilityBinding = new Binding
         {
             Source = _viewModel,
-            Path = new PropertyPath(nameof(HistoryViewModel.ShowDetail)),
-            Converter = boolToVisibilityConverter,
-            Mode = BindingMode.OneWay
+            Path = new PropertyPath(nameof(HistoryViewModel.ShowPreviewPanel)),
+            Converter = boolToVisibilityNegateConverter,
+            Mode = BindingMode.OneWay,
         };
+        controlBar.SetBinding(UIElement.VisibilityProperty, visibilityBinding);
+    }
 
-        textBlock.SetBinding(UIElement.VisibilityProperty, visibilityBinding);
+    private bool _isDraggingSplitter = false;
+    private double _splitterStartX = 0;
+    private int _splitterStartWidth = 0;
+
+    private void PreviewSplitter_PointerEntered(object sender, PointerRoutedEventArgs _)
+    {
+        if (sender is Border border)
+        {
+            border.Background = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["SystemControlForegroundAccentBrush"];
+        }
+    }
+
+    private void PreviewSplitter_PointerExited(object sender, PointerRoutedEventArgs _)
+    {
+        if (sender is Border border && !_isDraggingSplitter)
+        {
+            border.Background = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["SystemControlForegroundBaseLowBrush"];
+        }
+    }
+
+    private void PreviewSplitter_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            _isDraggingSplitter = true;
+            _splitterStartX = e.GetCurrentPoint(_MainContentGrid).Position.X;
+            _splitterStartWidth = _viewModel.ListViewWidth;
+            border.CapturePointer(e.Pointer);
+            e.Handled = true;
+        }
+    }
+
+    private void PreviewSplitter_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isDraggingSplitter)
+            return;
+
+        var currentX = e.GetCurrentPoint(_MainContentGrid).Position.X;
+        var delta = currentX - _splitterStartX;
+        var newWidth = _splitterStartWidth + (int)delta;
+
+        // 计算最大宽度：确保预览面板至少300像素
+        var maxWidth = (int)_MainContentGrid.ActualWidth - 300 - 2;
+        if (maxWidth < 150) maxWidth = 150;
+
+        // 限制宽度范围
+        newWidth = Math.Clamp(newWidth, 150, maxWidth);
+
+        _viewModel.ListViewWidth = newWidth;
+        _ListView.Width = newWidth;
+        e.Handled = true;
+    }
+
+    private void PreviewSplitter_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            _isDraggingSplitter = false;
+            border.ReleasePointerCapture(e.Pointer);
+            border.Background = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["SystemControlForegroundBaseLowBrush"];
+            e.Handled = true;
+        }
     }
 }

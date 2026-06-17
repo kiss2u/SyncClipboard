@@ -6,6 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
         xmlns:views="using:SyncClipboard.Desktop.Views"
+        xmlns:controls="using:SyncClipboard.Desktop.Controls"
         xmlns:vm="using:SyncClipboard.Core.ViewModels"
         xmlns:vms="using:SyncClipboard.Core.ViewModels.Sub"
         xmlns:local="using:SyncClipboard.Desktop.Views"
@@ -44,11 +45,12 @@
     <Window.KeyBindings>
         <KeyBinding Gesture="Ctrl+Home" Command="{Binding CtrlHomeCommand}" />
         <KeyBinding Gesture="Ctrl+End" Command="{Binding CtrlEndCommand}" />
+        <KeyBinding Gesture="Ctrl+P" Command="{Binding TogglePreviewPanelCommand}" />
     </Window.KeyBindings>
     <Window.DataTemplates>
         <local:ClipboardViewerTemplateSelector>
             <DataTemplate x:Key="Normal" DataType="vms:HistoryRecordVM">
-                <TextBlock Text="{Binding Text, Converter={x:Static vc:FuncConverter.LimitLines}}" />
+                <TextBlock Text="{Binding Text, Converter={x:Static vc:FuncConverter.LimitLines}}" MaxLines="{Binding #_HistoryWindow.ViewModel.CompactListMaxLines}" />
             </DataTemplate>
             <DataTemplate x:Key="Image" DataType="vms:HistoryRecordVM">
                 <StackPanel Spacing="4" Orientation="Vertical">
@@ -58,8 +60,9 @@
                            Stretch="None"
                            DoubleTapped="Image_DoubleTapped"
                            Opacity="0"
-                           Loaded="Image_Loaded" />
-                    <TextBlock HorizontalAlignment="Left" Text="{Binding Text, Converter={x:Static vc:FuncConverter.LimitLines}}" />
+                           Loaded="Image_Loaded"
+                           IsVisible="{Binding #_HistoryWindow.ViewModel.IsCompactListMode, Converter={x:Static vc:FuncConverter.Not}}" />
+                    <TextBlock HorizontalAlignment="Left" Text="{Binding Text, Converter={x:Static vc:FuncConverter.LimitLines}}" MaxLines="{Binding #_HistoryWindow.ViewModel.CompactListMaxLines}" />
                 </StackPanel>
             </DataTemplate>
         </local:ClipboardViewerTemplateSelector>
@@ -113,6 +116,9 @@
                 <ToggleButton ToolTip.Tip="{x:Static i18n:Strings.WindowTopmost}" Classes="FontIcon" IsChecked="{Binding IsTopmost, Mode=TwoWay}">
                     <ui:FontIcon Glyph="&#xE840;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
                 </ToggleButton>
+                <ToggleButton ToolTip.Tip="{x:Static i18n:Strings.PreviewPanel}" Classes="FontIcon" IsChecked="{Binding ShowPreviewPanel, Mode=TwoWay}">
+                    <ui:FontIcon Glyph="&#xE145;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                </ToggleButton>
                 <Button x:Name="_MenuButton"
                         Width="24"
                         Height="24"
@@ -125,7 +131,7 @@
                             <ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.ShowSyncStatus}" IsChecked="{Binding ShowSyncState, Mode=TwoWay}" />
                             <!--<ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.OnlyShowLocal}" IsChecked="{Binding OnlyShowLocal, Mode=TwoWay}" />-->
                             <ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.SortByLastAccessed}" IsChecked="{Binding SortByLastAccessed, Mode=TwoWay}" />
-                            <ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.ShowDetail}" IsChecked="{Binding ShowDetail, Mode=TwoWay}" />
+                            <ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.CompactListWhenPreview}" IsChecked="{Binding CompactListWhenPreview, Mode=TwoWay}" />
                             <ui:MenuFlyoutSeparator />
                             <ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.FollowCaretPosition}" IsChecked="{Binding FollowCaretPosition, Mode=TwoWay}" />
                             <ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.FollowForegroundWindowScreen}" IsChecked="{Binding FollowForegroundWindowScreen, Mode=TwoWay}" />
@@ -184,120 +190,91 @@
                    Stretch="None"
                    IsHitTestVisible="False"
                    Opacity="0" />
-            <ListBox x:Name="_ListBox"
-                     Grid.Row="2"
-                     ItemsSource="{Binding HistoryItems}"
-                     SelectionMode="Single"
-                     SelectedIndex="{Binding SelectedIndex}"
-                     DoubleTapped="ListBox_DoubleTapped">
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel />
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-                <ListBox.ItemTemplate>
-                    <DataTemplate x:DataType="vms:HistoryRecordVM">
-                        <Grid MinHeight="10"
-                              ColumnDefinitions="Auto, *, Auto, Auto"
-                              Background="Transparent"
-                              Opacity="{Binding SyncState, Converter={x:Static vc:FuncConverter.SyncStateToOpacity}}"
-                              PointerPressed="Grid_PointerPressed">
-                            <Grid.ContextFlyout>
-                                <ui:FAMenuFlyout Opening="ItemContextFlyout_Opening" />
-                            </Grid.ContextFlyout>
-                            <Border Grid.Column="0"
-                                    Height="40"
-                                    Margin="0,0,0,0"
-                                    VerticalAlignment="Top">
-                                <ui:FontIcon VerticalAlignment="Center" Glyph="{Binding Type, Converter={x:Static vc:FuncConverter.ProfileTypeToFontIcon}}" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                            </Border>
-                            <StackPanel Grid.Column="1" Orientation="Vertical">
-                                <ContentControl Padding="8,8,0,0"
-                                                VerticalAlignment="Center"
-                                                FontSize="{Binding #_HistoryWindow.ViewModel.ListItemFontSize}"
-                                                Content="{Binding .}" />
-                                <TextBlock Padding="8,2,0,6"
-                                           FontSize="{Binding #_HistoryWindow.ViewModel.ListItemFontSize}"
-                                           Opacity="0.5"
-                                           Text="{Binding DetailText}"
-                                           IsVisible="{Binding #_HistoryWindow.ViewModel.ShowDetail}" />
-                            </StackPanel>
-                            <Border Grid.Column="2"
-                                    Height="40"
-                                    VerticalAlignment="Top"
-                                    Padding="12,0,0,0">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="2">
-                                    <TextBlock Text="{Binding RelativeTime}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,8,0"
-                                               Opacity="0.6"
-                                               FontSize="12"
-                                               ToolTip.Tip="{Binding DetailText}" />
-                                    <Button IsVisible="{Binding HasError}">
-                                        <Button.Flyout>
-                                            <Flyout>
-                                                <TextBlock Text="{Binding ErrorMessage}" />
-                                            </Flyout>
-                                        </Button.Flyout>
-                                        <ui:FontIcon Glyph="&#xE783;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                                    </Button>
-                                    <!--  Download / Upload cluster (sync buttons container)  -->
-                                    <StackPanel Orientation="Horizontal" Spacing="2" IsVisible="{Binding #_HistoryWindow.ViewModel.EnableSyncHistory}">
-                                        <!--  Download button  -->
-                                        <Button Command="{Binding #_HistoryWindow.ViewModel.DownloadRemoteProfileCommand}" CommandParameter="{Binding .}" IsVisible="{Binding ShowDownloadButton}">
-                                            <ui:FontIcon Glyph="&#xE896;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                                        </Button>
-                                        <!--  Cancel download button with progress ring  -->
-                                        <Button Command="{Binding #_HistoryWindow.ViewModel.CancelDownloadCommand}"
-                                                CommandParameter="{Binding .}"
-                                                IsVisible="{Binding ShowDownloadProgress}"
-                                                ToolTip.Tip="{x:Static i18n:Strings.CancelDownload}">
-                                            <ui:ProgressRing Width="16"
-                                                             Height="16"
-                                                             IsIndeterminate="{Binding IsDownloadPending}"
-                                                             IsActive="True"
-                                                             Value="{Binding DownloadProgress}" />
-                                        </Button>
-                                        <!--  Upload button  -->
-                                        <Button Command="{Binding #_HistoryWindow.ViewModel.UploadLocalHistoryCommand}" CommandParameter="{Binding .}" IsVisible="{Binding ShowUploadButton}">
-                                            <ui:FontIcon Glyph="&#xE898;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                                        </Button>
-                                        <!--  Cancel upload button with progress ring  -->
-                                        <Button Command="{Binding #_HistoryWindow.ViewModel.CancelUploadCommand}"
-                                                CommandParameter="{Binding .}"
-                                                IsVisible="{Binding ShowUploadProgress}"
-                                                ToolTip.Tip="{x:Static i18n:Strings.CancelUpload}">
-                                            <ui:ProgressRing Width="16"
-                                                             Height="16"
-                                                             IsIndeterminate="{Binding IsUploadPending}"
-                                                             IsActive="{Binding IsUploading}"
-                                                             Value="{Binding UploadProgress}" />
-                                        </Button>
-                                    </StackPanel>
-                                    <Button Click="CopyButtonClicked" IsVisible="{Binding IsLocalFileReady}">
-                                        <ui:FontIcon Glyph="&#xE8C8;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                                    </Button>
-                                    <Button Click="PasteButtonClicked" IsVisible="{Binding IsLocalFileReady}">
-                                        <ui:FontIcon Glyph="&#xE77F;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                                    </Button>
-                                    <Button Command="{Binding #_HistoryWindow.ViewModel.ChangeStarStatusCommand}" CommandParameter="{Binding .}">
-                                        <ui:FontIcon Glyph="{Binding Stared, Converter={x:Static vc:FuncConverter.ToStarIcon}}" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                                    </Button>
-                                    <Button Command="{Binding #_HistoryWindow.ViewModel.DeleteItemCommand}" CommandParameter="{Binding .}">
-                                        <ui:FontIcon Glyph="&#xE74D;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
-                                    </Button>
+            <Grid x:Name="_MainContentGrid" Grid.Row="2" ColumnDefinitions="Auto, Auto, Auto">
+                <ListBox x:Name="_ListBox"
+                         Grid.Column="0"
+                         ItemsSource="{Binding HistoryItems}"
+                         SelectionMode="Single"
+                         SelectedIndex="{Binding SelectedIndex}"
+                         DoubleTapped="ListBox_DoubleTapped"
+                         HorizontalAlignment="Stretch">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vms:HistoryRecordVM">
+                            <Grid MinHeight="10"
+                                  ColumnDefinitions="Auto, *, Auto, Auto"
+                                  Background="Transparent"
+                                  Opacity="{Binding SyncState, Converter={x:Static vc:FuncConverter.SyncStateToOpacity}}"
+                                  PointerPressed="Grid_PointerPressed">
+                                <Grid.ContextFlyout>
+                                    <ui:FAMenuFlyout Opening="ItemContextFlyout_Opening" />
+                                </Grid.ContextFlyout>
+                                <Border Grid.Column="0"
+                                        Height="40"
+                                        Margin="0,0,0,0"
+                                        VerticalAlignment="Top">
+                                    <ui:FontIcon VerticalAlignment="Center" Glyph="{Binding Type, Converter={x:Static vc:FuncConverter.ProfileTypeToFontIcon}}" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Orientation="Vertical">
+                                    <ContentControl Padding="8,8,0,0"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="{Binding #_HistoryWindow.ViewModel.ListItemFontSize}"
+                                                    Content="{Binding .}" />
                                 </StackPanel>
-                            </Border>
-                            <Border Grid.Column="3"
-                                    Width="2"
-                                    Margin="4,0,4,0"
-                                    Background="{Binding SyncState, Converter={x:Static vc:FuncConverter.SyncStateToBrush}}"
-                                    ToolTip.Tip="{Binding SyncState, Converter={x:Static vc:FuncConverter.SyncStateToText}}"
-                                    IsVisible="{Binding #_HistoryWindow.ViewModel.ShowSyncState}" />
-                        </Grid>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                                <Border Grid.Column="2"
+                                        Height="40"
+                                        VerticalAlignment="Top"
+                                        Padding="12,0,0,0">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock Text="{Binding RelativeTime}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,8,0"
+                                                   Opacity="0.6"
+                                                   FontSize="12"
+                                                   ToolTip.Tip="{Binding FullDateTime}" />
+                                        <!--  Control buttons - hidden when preview panel is open  -->
+                                        <views:RecordControlBar IsVisible="{Binding !#_HistoryWindow.ViewModel.ShowPreviewPanel}" Record="{Binding .}" ViewModel="{Binding #_HistoryWindow.ViewModel}" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Grid.Column="3"
+                                        Width="2"
+                                        Margin="4,0,4,0"
+                                        Background="{Binding SyncState, Converter={x:Static vc:FuncConverter.SyncStateToBrush}}"
+                                        ToolTip.Tip="{Binding SyncState, Converter={x:Static vc:FuncConverter.SyncStateToText}}">
+                                    <Border.IsVisible>
+                                        <MultiBinding Converter="{x:Static vc:FuncConverter.ShowSyncStatusIndicator}">
+                                            <Binding Path="ViewModel.ShowSyncState" RelativeSource="{RelativeSource AncestorType=views:HistoryWindow}" />
+                                            <Binding Path="ViewModel.ShowPreviewPanel" RelativeSource="{RelativeSource AncestorType=views:HistoryWindow}" />
+                                        </MultiBinding>
+                                    </Border.IsVisible>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Border x:Name="_PreviewSplitter"
+                        Grid.Column="1"
+                        Width="1"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Stretch"
+                        Background="LightGray"
+                        IsVisible="{Binding ShowPreviewPanel}"
+                        Cursor="SizeWestEast"
+                        PointerEntered="PreviewSplitter_PointerEntered"
+                        PointerExited="PreviewSplitter_PointerExited"
+                        PointerPressed="PreviewSplitter_PointerPressed"
+                        PointerMoved="PreviewSplitter_PointerMoved"
+                        PointerReleased="PreviewSplitter_PointerReleased" />
+                <controls:PreviewPanel x:Name="_PreviewPanel"
+                                       Grid.Column="2"
+                                       IsVisible="{Binding ShowPreviewPanel}"
+                                       ViewModel="{Binding $parent[Window].DataContext, x:DataType=vm:HistoryViewModel}"
+                                       SelectedItem="{Binding #_ListBox.SelectedItem}" />
+            </Grid>
             <ui:InfoBar x:Name="_InfoBar"
                         Grid.Row="2"
                         Width="400"

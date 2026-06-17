@@ -3,7 +3,9 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using SyncClipboard.Core.Commons;
@@ -14,8 +16,10 @@ using SyncClipboard.Core.Utilities;
 using SyncClipboard.Core.ViewModels;
 using SyncClipboard.Core.ViewModels.Sub;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SyncClipboard.Desktop.Views;
 
@@ -38,6 +42,7 @@ public partial class HistoryWindow : Window, IWindow
         InitializeComponent();
         InitializeScrollWatcher();
         SetWindowMinSize();
+
         this.Deactivated += (_, _) => _viewModel.OnLostFocus();
         this.Activated += (_, _) =>
         {
@@ -55,6 +60,18 @@ public partial class HistoryWindow : Window, IWindow
 
         this.Topmost = _viewModel.IsTopmost;
         _ = _viewModel.Init(this);
+
+        // 初始化预览面板布局
+        UpdateListViewWidthForPreviewPanel();
+
+        // 监听ViewModel属性变化
+        _viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(HistoryViewModel.ShowPreviewPanel))
+            {
+                UpdateListViewWidthForPreviewPanel();
+            }
+        };
     }
 
     private void SetWindowMinSize()
@@ -479,5 +496,87 @@ public partial class HistoryWindow : Window, IWindow
         this.WindowStartupLocation = WindowStartupLocation.Manual;
         this.Position = new PixelPoint(x, y);
         return true;
+    }
+
+    private void UpdateListViewWidthForPreviewPanel()
+    {
+        if (_viewModel.ShowPreviewPanel)
+        {
+            // 预览面板显示时，ListView固定宽度，预览面板填充剩余空间
+            _MainContentGrid.ColumnDefinitions[0].Width = new GridLength(0, GridUnitType.Auto);
+            _MainContentGrid.ColumnDefinitions[2].Width = new GridLength(1, GridUnitType.Star);
+            _ListBox.Width = _viewModel.ListViewWidth;
+        }
+        else
+        {
+            // 预览面板关闭时，ListView填充整个Grid，预览面板列不占空间
+            _MainContentGrid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
+            _MainContentGrid.ColumnDefinitions[2].Width = new GridLength(0, GridUnitType.Auto);
+            _ListBox.Width = double.NaN; // Auto
+        }
+    }
+
+    // 分隔条拖动相关
+    private bool _isDraggingSplitter = false;
+    private double _splitterStartX = 0;
+    private int _splitterStartWidth = 0;
+
+    private void PreviewSplitter_PointerEntered(object sender, PointerEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = new SolidColorBrush(Color.Parse("#0078D4")); // 使用蓝色作为强调色
+        }
+    }
+
+    private void PreviewSplitter_PointerExited(object sender, PointerEventArgs e)
+    {
+        if (sender is Border border && !_isDraggingSplitter)
+        {
+            border.Background = Brushes.LightGray;
+        }
+    }
+
+    private void PreviewSplitter_PointerPressed(object sender, PointerPressedEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            _isDraggingSplitter = true;
+            _splitterStartX = e.GetPosition(_MainContentGrid).X;
+            _splitterStartWidth = _viewModel.ListViewWidth;
+            e.Pointer.Capture(border);
+            e.Handled = true;
+        }
+    }
+
+    private void PreviewSplitter_PointerMoved(object sender, PointerEventArgs e)
+    {
+        if (!_isDraggingSplitter)
+            return;
+
+        var currentX = e.GetPosition(_MainContentGrid).X;
+        var delta = currentX - _splitterStartX;
+        var newWidth = _splitterStartWidth + (int)delta;
+
+        // 计算最大宽度：确保预览面板至少300像素，分隔条宽度为1像素
+        var maxWidth = (int)_MainContentGrid.Bounds.Width - 300 - 1;
+        if (maxWidth < 150) maxWidth = 150;
+
+        // 限制宽度范围
+        newWidth = Math.Clamp(newWidth, 150, maxWidth);
+
+        _viewModel.ListViewWidth = newWidth;
+        _ListBox.Width = newWidth;
+        e.Handled = true;
+    }
+
+    private void PreviewSplitter_PointerReleased(object sender, PointerReleasedEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            _isDraggingSplitter = false;
+            e.Pointer.Capture(null);
+            border.Background = Brushes.LightGray;
+        }
     }
 }
