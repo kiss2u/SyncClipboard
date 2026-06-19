@@ -60,6 +60,17 @@ internal class TrayIconImpl : TrayIconBase<BitmapImage>
 
     protected override BitmapImage[] UploadIcons()
     {
+        if (_trayIcon.DispatcherQueue.HasThreadAccess)
+        {
+            return CreateUploadIcons();
+        }
+        BitmapImage[]? icons = null;
+        _trayIcon.DispatcherQueue.EnqueueAsync(() => icons = CreateUploadIcons()).Wait();
+        return icons!;
+    }
+
+    private BitmapImage[] CreateUploadIcons()
+    {
         return Enumerable.Range(1, 17)
             .Select(x => $"ms-appx:///Assets/upload{x:d3}.ico")
             .Select(x => new BitmapImage(new Uri(x)))
@@ -68,10 +79,21 @@ internal class TrayIconImpl : TrayIconBase<BitmapImage>
 
     protected override BitmapImage[] DownloadIcons()
     {
+        if (_trayIcon.DispatcherQueue.HasThreadAccess)
+        {
+            return CreateDownloadIcons();
+        }
+        BitmapImage[]? icons = null;
+        _trayIcon.DispatcherQueue.EnqueueAsync(() => icons = CreateDownloadIcons()).Wait();
+        return icons!;
+    }
+
+    private BitmapImage[] CreateDownloadIcons()
+    {
         return Enumerable.Range(1, 17)
-           .Select(x => $"ms-appx:///Assets/download{x:d3}.ico")
-           .Select(x => new BitmapImage(new Uri(x)))
-           .ToArray();
+            .Select(x => $"ms-appx:///Assets/download{x:d3}.ico")
+            .Select(x => new BitmapImage(new Uri(x)))
+            .ToArray();
     }
 
     protected override void SetToolTip(string text)

@@ -22,10 +22,9 @@ public abstract class TrayIconBase<IconType> : ITrayIcon where IconType : class
 
     public abstract void Create();
 
-    private static IThreadDispatcher Dispatcher => AppCore.Current.Services.GetRequiredService<IThreadDispatcher>();
-
     #region Icon Animatinon
     private const int ANIMATED_ICON_DELAY_TIME = 150;
+    private readonly object _animationLock = new();
     private Timer? _iconTimer;
     private bool _isShowingDanamicIcon;
     private bool _isActive = true;
@@ -51,12 +50,12 @@ public abstract class TrayIconBase<IconType> : ITrayIcon where IconType : class
 
     public void ShowDownloadAnimation()
     {
-        Dispatcher.RunOnMainThreadAsync(() => SetDynamicNotifyIcon(DownloadIcons(), ANIMATED_ICON_DELAY_TIME));
+        SetDynamicNotifyIcon(DownloadIcons(), ANIMATED_ICON_DELAY_TIME);
     }
 
     public void ShowUploadAnimation()
     {
-        Dispatcher.RunOnMainThreadAsync(() => SetDynamicNotifyIcon(UploadIcons(), ANIMATED_ICON_DELAY_TIME));
+        SetDynamicNotifyIcon(UploadIcons(), ANIMATED_ICON_DELAY_TIME);
     }
 
     private void SetDynamicNotifyIcon(IEnumerable<IconType> icons, int delayTime)
@@ -68,7 +67,7 @@ public abstract class TrayIconBase<IconType> : ITrayIcon where IconType : class
 
         StopAnimation();
 
-        lock (this)
+        lock (_animationLock)
         {
             _dynamicIcons = icons;
             _dynamicIconEnumerator = icons.GetEnumerator();
@@ -79,7 +78,7 @@ public abstract class TrayIconBase<IconType> : ITrayIcon where IconType : class
 
     public void StopAnimation()
     {
-        lock (this)
+        lock (_animationLock)
         {
             _iconTimer?.Dispose();
             _iconTimer = null;
@@ -94,7 +93,7 @@ public abstract class TrayIconBase<IconType> : ITrayIcon where IconType : class
     private void SetNextDynamicNotifyIcon(object? _)
     {
         IconType icon;
-        lock (this)
+        lock (_animationLock)
         {
             if (_dynamicIcons is null || _dynamicIconEnumerator is null)
             {
