@@ -1349,7 +1349,7 @@ namespace SyncClipboard.Core.I18n {
         ///Ctrl+Home: Scroll to top
         ///Ctrl+End: Scroll to bottom
         ///Ctrl+S: Toggle star
-        ///Ctrl+Delete: Delete item
+        ///Ctrl+D: Delete item
         ///Ctrl+P: Toggle preview panel
         ///↑/↓: Navigate items
         ///Tab/Shift+Tab: Switch filters

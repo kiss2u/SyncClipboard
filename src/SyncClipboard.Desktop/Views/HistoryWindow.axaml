@@ -45,7 +45,6 @@
     <Window.KeyBindings>
         <KeyBinding Gesture="Ctrl+Home" Command="{Binding CtrlHomeCommand}" />
         <KeyBinding Gesture="Ctrl+End" Command="{Binding CtrlEndCommand}" />
-        <KeyBinding Gesture="Ctrl+P" Command="{Binding TogglePreviewPanelCommand}" />
     </Window.KeyBindings>
     <Window.DataTemplates>
         <local:ClipboardViewerTemplateSelector>

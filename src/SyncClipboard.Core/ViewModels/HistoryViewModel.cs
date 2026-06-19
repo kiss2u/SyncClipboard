@@ -746,7 +746,7 @@ public partial class HistoryViewModel : ObservableObject
                 case Key.S:
                     ToggleStarForSelectedItem();
                     return true;
-                case Key.Delete:
+                case Key.D:
                     DeleteSelectedItem();
                     return true;
                 case Key.P:
