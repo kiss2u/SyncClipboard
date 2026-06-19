@@ -37,7 +37,8 @@ public partial class HistoryWindow : Window, IWindow
         DataContext = ViewModel;
 
         this.ExtendClientAreaToDecorationsHint = true;
-        this.ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
+        if (!OperatingSystem.IsMacOS())
+            this.ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.NoChrome;
 
         InitializeComponent();
         InitializeScrollWatcher();

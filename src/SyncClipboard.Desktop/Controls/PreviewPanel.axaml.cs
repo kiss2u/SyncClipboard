@@ -196,11 +196,14 @@ public sealed partial class PreviewPanel : UserControl
         _SyncedText.IsVisible = enableSync && isSynced;
     }
 
-    private static async Task<(uint width, uint height)> GetImageDimensions(string imagePath)
+    private static Task<(uint width, uint height)> GetImageDimensions(string imagePath)
     {
-        using var stream = File.OpenRead(imagePath);
-        using var bitmap = new Bitmap(stream);
-        return ((uint)bitmap.PixelSize.Width, (uint)bitmap.PixelSize.Height);
+        return Task.Run(() =>
+        {
+            using var stream = File.OpenRead(imagePath);
+            using var bitmap = new Bitmap(stream);
+            return ((uint)bitmap.PixelSize.Width, (uint)bitmap.PixelSize.Height);
+        });
     }
 
     private void PreviewImage_DoubleTapped(object? sender, TappedEventArgs e)
