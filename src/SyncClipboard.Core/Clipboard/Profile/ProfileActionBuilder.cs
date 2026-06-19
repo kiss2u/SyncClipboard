@@ -40,15 +40,12 @@ public partial class ProfileActionBuilder(LocalClipboardSetter setter, IProfileE
         return actions;
     }
 
-    [GeneratedRegex("http(s)?://[a-zA-Z0-9\\-_]+(\\.[a-zA-Z0-9\\-_]+)+(:[0-9]{1,5})?(/[a-zA-Z0-9\\-_.?=&%]*)*", RegexOptions.IgnoreCase)]
-    private static partial Regex UrlRegex();
-
     private static bool HasUrl(string str, out string? url)
     {
         url = null;
         try
         {
-            var match = UrlRegex().Match(str);
+            var match = StringHelper.UrlRegex().Match(str);
             if (match.Success)
             {
                 url = match.Value;

@@ -44,10 +44,12 @@ public static class FuncConverter
             }
 
             if (valuesList.Count >= 2 &&
-                valuesList[0] is HistoryRecordVM record &&
-                valuesList[1] is string previewImage)
+                valuesList[0] is HistoryRecordVM record)
             {
-                return record.Type == ProfileType.Image && previewImage != null;
+                // PreviewImage 可能是 string 或 null
+                var previewImage = valuesList[1];
+                var hasPreviewImage = previewImage is string s && s != null;
+                return record.Type == ProfileType.Image && hasPreviewImage;
             }
             return false;
         });
@@ -65,10 +67,12 @@ public static class FuncConverter
             }
 
             if (valuesList.Count >= 2 &&
-                valuesList[0] is HistoryRecordVM record &&
-                valuesList[1] is string previewImage)
+                valuesList[0] is HistoryRecordVM record)
             {
-                return record.Type != ProfileType.Image || previewImage == null;
+                // PreviewImage 可能是 string 或 null
+                var previewImage = valuesList[1];
+                var hasPreviewImage = previewImage is string s && s != null;
+                return record.Type != ProfileType.Image || !hasPreviewImage;
             }
             return false;
         });

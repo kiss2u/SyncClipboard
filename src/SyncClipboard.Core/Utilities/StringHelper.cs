@@ -1,7 +1,18 @@
+using System.Text.RegularExpressions;
+
 namespace SyncClipboard.Core.Utilities;
 
-public static class StringHelper
+public static partial class StringHelper
 {
+    /// <summary>
+    /// URL 正则表达式，匹配 http/https 链接
+    /// 支持域名、端口、路径、查询参数和锚点
+    /// </summary>
+    [GeneratedRegex(
+        @"http(s)?://[a-zA-Z0-9\-_]+(\.[a-zA-Z0-9\-_]+)+(:[0-9]{1,5})?(/[a-zA-Z0-9\-_.?=&%#]*)*",
+        RegexOptions.IgnoreCase)]
+    public static partial Regex UrlRegex();
+
     public static string GetHostFromUrl(string url)
     {
         if (string.IsNullOrWhiteSpace(url))

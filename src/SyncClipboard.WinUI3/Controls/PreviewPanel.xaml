@@ -60,10 +60,7 @@
                        Text="{x:Bind i18n:Strings.SelectRecordToPreview}"
                        Visibility="{x:Bind vc:ConvertMethod.NullToVisibility(SelectedItem), Mode=OneWay, FallbackValue=Visible}" />
             <ScrollViewer Padding="12,0" VerticalScrollBarVisibility="Auto" Visibility="{x:Bind vc:ConvertMethod.TextPreviewVisibility(SelectedItem, SelectedItem.PreviewImage), Mode=OneWay, FallbackValue=Collapsed}">
-                <TextBlock x:Name="_PreviewTextBlock"
-                           TextWrapping="WrapWholeWords"
-                           IsTextSelectionEnabled="True"
-                           Text="{x:Bind SelectedItem.Text, Mode=OneWay}" />
+                <local:HyperlinkTextBlock x:Name="_PreviewTextBlock" TextWrapping="WrapWholeWords" LinkText="{x:Bind SelectedItem.Text, Mode=OneWay}" />
             </ScrollViewer>
             <Image x:Name="_PreviewImage"
                    HorizontalAlignment="Center"
