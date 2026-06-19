@@ -103,7 +103,7 @@ public sealed partial class HyperlinkTextBlock : UserControl
             // 添加链接前的普通文本
             if (match.Index > currentIndex)
             {
-                var plainText = text.Substring(currentIndex, match.Index - currentIndex);
+                var plainText = text[currentIndex..match.Index];
                 paragraph.Inlines.Add(new Run { Text = plainText });
                 currentIndex = match.Index;
             }
@@ -121,7 +121,7 @@ public sealed partial class HyperlinkTextBlock : UserControl
         // 添加剩余的普通文本
         if (currentIndex < text.Length)
         {
-            var remainingText = text.Substring(currentIndex);
+            var remainingText = text[currentIndex..];
             paragraph.Inlines.Add(new Run { Text = remainingText });
         }
 

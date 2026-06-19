@@ -138,21 +138,12 @@ public partial class HyperlinkTextBlock : UserControl
         var text = LinkText;
         if (string.IsNullOrEmpty(text))
         {
-            _TextBlock.Text = null;
             return;
         }
 
         int currentIndex = 0;
         var matches = StringHelper.UrlRegex().Matches(text);
 
-        // 如果没有链接，直接设置 Text 属性
-        if (matches.Count == 0)
-        {
-            _TextBlock.Text = text;
-            return;
-        }
-
-        // 有链接时，构建 Inlines
         foreach (Match match in matches)
         {
             // 添加链接前的普通文本
