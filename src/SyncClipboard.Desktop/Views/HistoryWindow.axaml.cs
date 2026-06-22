@@ -323,7 +323,7 @@ public partial class HistoryWindow : Window, IWindow
         _viewModel.HandleItemDoubleClick(record);
     }
 
-    private void Grid_PointerPressed(object? sender, PointerPressedEventArgs e)
+    private async void Grid_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         var clickedItem = ((Grid?)sender)?.DataContext as HistoryRecordVM;
         if (clickedItem == null)
@@ -340,6 +340,28 @@ public partial class HistoryWindow : Window, IWindow
                 e.Handled = true;
                 _ = _viewModel.CopyToClipboard(clickedItem, true, CancellationToken.None);
                 return;
+            }
+
+            // 左键：启动拖拽
+            if (properties.IsLeftButtonPressed)
+            {
+                try
+                {
+                    // Avalonia: 创建DataObject并填充数据
+                    var dataObject = new DataObject();
+                    var success = await _viewModel.FillDragPackage(dataObject, clickedItem, CancellationToken.None);
+                    if (success)
+                    {
+                        var result = await DragDrop.DoDragDrop(
+                            e,
+                            dataObject,
+                            Avalonia.Input.DragDropEffects.Copy);
+                    }
+                }
+                catch
+                {
+                    // 拖拽失败，忽略
+                }
             }
         }
     }

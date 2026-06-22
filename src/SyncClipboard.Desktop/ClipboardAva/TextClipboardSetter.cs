@@ -1,4 +1,4 @@
-﻿using Avalonia.Input;
+using Avalonia.Input;
 using SyncClipboard.Core.Models;
 using System;
 using System.Runtime.Versioning;
@@ -10,17 +10,29 @@ namespace SyncClipboard.Desktop.ClipboardAva;
 
 internal class TextClipboardSetter : ClipboardSetterBase<TextProfile>
 {
-    [SupportedOSPlatform("linux")]
-    protected override DataObject CreatePackage(ClipboardMetaInfomation metaInfomation)
+    public override Task FillPackage(object package, ClipboardMetaInfomation metaInfomation)
     {
-        var str = metaInfomation?.Text ?? "";
-        var utf8Text = Encoding.UTF8.GetBytes(str);
-        var dataObject = new DataObject();
-        dataObject.Set(Format.TEXT, utf8Text);
-        dataObject.Set("text/plain", utf8Text);
-        dataObject.Set("text/plain;charset=utf-8", utf8Text);
-        dataObject.Set(Format.Utf8String, str);
-        return dataObject;
+        if (package is not DataObject dataObject)
+        {
+            return Task.CompletedTask;
+        }
+
+        if (OperatingSystem.IsLinux())
+        {
+            var str = metaInfomation?.Text ?? "";
+            var utf8Text = Encoding.UTF8.GetBytes(str);
+            dataObject.Set(Format.TEXT, utf8Text);
+            dataObject.Set("text/plain", utf8Text);
+            dataObject.Set("text/plain;charset=utf-8", utf8Text);
+            dataObject.Set(Format.Utf8String, str);
+        }
+        else
+        {
+            // macOS and Windows use simpler text format
+            dataObject.Set(Format.Text, metaInfomation?.Text ?? "");
+        }
+
+        return Task.CompletedTask;
     }
 
     public override Task SetLocalClipboard(ClipboardMetaInfomation metaInfomation, CancellationToken ctk)

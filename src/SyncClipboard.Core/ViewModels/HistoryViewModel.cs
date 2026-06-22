@@ -47,6 +47,7 @@ public partial class HistoryViewModel : ObservableObject
     private readonly ICaretPositionProvider _caretPositionProvider;
     private readonly IForegroundWindowInfoProvider _foregroundWindowInfoProvider;
     private readonly IMousePositionProvider _mousePositionProvider;
+    private readonly IServiceProvider _serviceProvider;
     private IOfficialSyncServer? historySyncServer;
 
     [ObservableProperty]
@@ -78,7 +79,8 @@ public partial class HistoryViewModel : ObservableObject
         IThreadDispatcher threadDispatcher,
         ICaretPositionProvider caretPositionProvider,
         IForegroundWindowInfoProvider foregroundWindowInfoProvider,
-        IMousePositionProvider mousePositionProvider)
+        IMousePositionProvider mousePositionProvider,
+        IServiceProvider serviceProvider)
     {
         this.historyManager = historyManager;
         this.keyboard = keyboard;
@@ -96,6 +98,7 @@ public partial class HistoryViewModel : ObservableObject
         this._caretPositionProvider = caretPositionProvider;
         this._foregroundWindowInfoProvider = foregroundWindowInfoProvider;
         this._mousePositionProvider = mousePositionProvider;
+        this._serviceProvider = serviceProvider;
 
         _transferQueue.TaskStatusChanged += OnTransferTaskStatusChanged;
 
@@ -1279,6 +1282,41 @@ public partial class HistoryViewModel : ObservableObject
     public void HandleImageDoubleClick(HistoryRecordVM record)
     {
         ViewImage(record);
+    }
+
+    public async Task<bool> FillDragPackage(object package, HistoryRecordVM record, CancellationToken token)
+    {
+        var historyRecord = record.ToHistoryRecord();
+        var profile = historyRecord.ToProfile();
+        var valid = await profile.IsLocalDataValid(true, token);
+        if (!valid)
+        {
+            historyRecord.IsLocalFileReady = false;
+            await historyManager.UpdateHistoryLocalInfo(historyRecord, token);
+            ShowWindowToastInfo(I18n.Strings.UnableToCopyByMissingFile);
+            return false;
+        }
+
+        var profileType = profile.GetType();
+        var setterInterface = typeof(IClipboardSetter<>).MakeGenericType(profileType);
+
+        if (_serviceProvider.GetService(setterInterface) is not IClipboardSetter setter)
+        {
+            await logger.WriteAsync($"No IClipboardSetter service is registered for type {profileType.Name}");
+            return false;
+        }
+
+        try
+        {
+            var localInfo = await profile.Localize(profileEnv.GetPersistentDir(), false, token);
+            await setter.FillPackage(package, localInfo.GetMetaInfomation());
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await logger.WriteAsync($"Failed to fill drag package: {ex.Message}");
+            return false;
+        }
     }
 
     private void ShowWindowToastInfo(string message)

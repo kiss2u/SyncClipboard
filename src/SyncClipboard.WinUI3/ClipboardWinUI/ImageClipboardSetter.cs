@@ -1,4 +1,4 @@
-﻿using SyncClipboard.Core.Clipboard;
+using SyncClipboard.Core.Clipboard;
 using SyncClipboard.Core.Models;
 using System;
 using System.IO;
@@ -11,20 +11,23 @@ namespace SyncClipboard.WinUI3.ClipboardWinUI;
 
 internal class ImageClipboardSetter : FileClipboardSetter, IClipboardSetter<ImageProfile>
 {
-    protected override async Task<DataPackage> CreatePackage(ClipboardMetaInfomation metaInfomation)
+    public override async Task FillPackage(object package, ClipboardMetaInfomation metaInfomation)
     {
         if (metaInfomation.Files is null || metaInfomation.Files.Length == 0)
         {
             throw new ArgumentException("Not Contain File.");
         }
 
-        var package = await base.CreatePackage(metaInfomation);
+        // 先填充基础文件数据
+        await base.FillPackage(package, metaInfomation);
 
-        SetHtml(package, metaInfomation.Files[0]);
-        SetQqFormat(package, metaInfomation.Files[0]);
-        await SetBitmap(package, metaInfomation.Files[0]);
-
-        return package;
+        if (package is DataPackage dataPackage)
+        {
+            // 添加图片特定格式
+            SetHtml(dataPackage, metaInfomation.Files[0]);
+            SetQqFormat(dataPackage, metaInfomation.Files[0]);
+            await SetBitmap(dataPackage, metaInfomation.Files[0]);
+        }
     }
 
     private static async Task SetBitmap(DataPackage dataObject, string imagePath)

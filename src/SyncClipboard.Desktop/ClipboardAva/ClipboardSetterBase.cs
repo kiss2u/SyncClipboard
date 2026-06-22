@@ -1,4 +1,4 @@
-﻿using Avalonia.Input;
+using Avalonia.Input;
 using Microsoft.Extensions.DependencyInjection;
 using SyncClipboard.Core.Clipboard;
 using SyncClipboard.Core.Models;
@@ -12,7 +12,7 @@ namespace SyncClipboard.Desktop.ClipboardAva;
 
 internal abstract class ClipboardSetterBase<ProfileType> : IClipboardSetter<ProfileType> where ProfileType : Profile
 {
-    protected abstract DataObject CreatePackage(ClipboardMetaInfomation metaInfomation);
+    public abstract Task FillPackage(object package, ClipboardMetaInfomation metaInfomation);
 
     private static async Task SetPackageToClipboard(DataObject obj, CancellationToken ctk)
     {
@@ -41,8 +41,10 @@ internal abstract class ClipboardSetterBase<ProfileType> : IClipboardSetter<Prof
         dataObject.Set(Format.TimeStamp, Encoding.UTF8.GetBytes($"{Environment.TickCount}{Environment.NewLine}"));
     }
 
-    public virtual Task SetLocalClipboard(ClipboardMetaInfomation metaInfomation, CancellationToken ctk)
+    public virtual async Task SetLocalClipboard(ClipboardMetaInfomation metaInfomation, CancellationToken ctk)
     {
-        return ClipboardSetterBase<ProfileType>.SetPackageToClipboard(CreatePackage(metaInfomation), ctk);
+        var dataObject = new DataObject();
+        await FillPackage(dataObject, metaInfomation);
+        await ClipboardSetterBase<ProfileType>.SetPackageToClipboard(dataObject, ctk);
     }
 }

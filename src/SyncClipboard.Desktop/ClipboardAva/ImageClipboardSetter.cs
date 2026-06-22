@@ -1,4 +1,4 @@
-﻿using Avalonia.Input;
+using Avalonia.Input;
 using ImageMagick;
 using SyncClipboard.Core.Clipboard;
 using SyncClipboard.Core.Models;
@@ -6,14 +6,21 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Versioning;
+using System.Threading.Tasks;
 
 namespace SyncClipboard.Desktop.ClipboardAva;
 
 internal class ImageClipboardSetter : FileClipboardSetter, IClipboardSetter<SyncClipboard.Shared.Profiles.ImageProfile>
 {
-    protected override DataObject CreatePackage(ClipboardMetaInfomation metaInfomation)
+    public override async Task FillPackage(object package, ClipboardMetaInfomation metaInfomation)
     {
-        var dataObject = base.CreatePackage(metaInfomation);
+        await base.FillPackage(package, metaInfomation);
+
+        if (package is not DataObject dataObject)
+        {
+            return;
+        }
+
         string clipboardHtml = ClipboardImageBuilder.GetClipboardHtml(metaInfomation.Files![0]);
 
         if (OperatingSystem.IsLinux())
@@ -29,8 +36,6 @@ internal class ImageClipboardSetter : FileClipboardSetter, IClipboardSetter<Sync
 
         string clipboardQq = ClipboardImageBuilder.GetClipboardQQFormat(metaInfomation.Files![0]);
         dataObject.Set("QQ_Unicode_RichEdit_Format", System.Text.Encoding.UTF8.GetBytes(clipboardQq));
-
-        return dataObject;
     }
 
     [SupportedOSPlatform("linux")]

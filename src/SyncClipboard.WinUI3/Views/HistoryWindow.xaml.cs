@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using SyncClipboard.Core;
 using SyncClipboard.Core.Commons;
 using SyncClipboard.Core.I18n;
 using SyncClipboard.Core.Interfaces;
@@ -24,6 +25,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Graphics;
 using Windows.Graphics.Imaging;
@@ -448,7 +450,7 @@ public sealed partial class HistoryWindow : Window, IWindow
 
     private void Grid_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        e.Handled = true;
+        e.Handled = false;
         var clickedItem = (HistoryRecordVM)((Grid?)sender)?.DataContext!;
         if ((HistoryRecordVM?)_ListView.SelectedValue != clickedItem)
         {
@@ -468,6 +470,33 @@ public sealed partial class HistoryWindow : Window, IWindow
         }
 
         _historyItemEvents.TriggerOriginalEvent();
+    }
+
+    private async void Grid_DragStarting(UIElement sender, DragStartingEventArgs e)
+    {
+        var draggedItem = (HistoryRecordVM)((Grid)sender).DataContext;
+        if (draggedItem == null)
+        {
+            e.Cancel = true;
+            return;
+        }
+
+        try
+        {
+            e.Data.RequestedOperation = DataPackageOperation.Copy;
+            var success = await _viewModel.FillDragPackage(e.Data, draggedItem, CancellationToken.None);
+            e.DragUI.SetContentFromDataPackage();
+
+            if (!success)
+            {
+                e.Cancel = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            AppCore.Current.Logger.Write($"Drag operation failed: {ex.Message}");
+            e.Cancel = true;
+        }
     }
 
     private void Image_PointerPressed(object sender, PointerRoutedEventArgs e)

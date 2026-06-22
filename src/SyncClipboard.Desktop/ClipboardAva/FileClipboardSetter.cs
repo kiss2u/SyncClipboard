@@ -1,4 +1,4 @@
-﻿using Avalonia.Input;
+using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using SyncClipboard.Core.Clipboard;
 using SyncClipboard.Core.Models;
@@ -7,19 +7,24 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SyncClipboard.Desktop.ClipboardAva;
 
 internal class FileClipboardSetter : ClipboardSetterBase<FileProfile>, IClipboardSetter<GroupProfile>
 {
-    protected override DataObject CreatePackage(ClipboardMetaInfomation metaInfomation)
+    public override Task FillPackage(object package, ClipboardMetaInfomation metaInfomation)
     {
         if (metaInfomation.Files is null || metaInfomation.Files.Length == 0)
         {
             throw new ArgumentException("Not Contain File.");
         }
 
-        var dataObject = new DataObject();
+        if (package is not DataObject dataObject)
+        {
+            return Task.CompletedTask;
+        }
+
         if (OperatingSystem.IsLinux())
         {
             SetLinux(dataObject, metaInfomation.Files);
@@ -29,7 +34,7 @@ internal class FileClipboardSetter : ClipboardSetterBase<FileProfile>, IClipboar
             SetMacos(dataObject, metaInfomation.Files);
         }
 
-        return dataObject;
+        return Task.CompletedTask;
     }
 
     [SupportedOSPlatform("linux")]

@@ -208,7 +208,8 @@
                                   ColumnDefinitions="Auto, *, Auto, Auto"
                                   Background="Transparent"
                                   Opacity="{Binding SyncState, Converter={x:Static vc:FuncConverter.SyncStateToOpacity}}"
-                                  PointerPressed="Grid_PointerPressed">
+                                  PointerPressed="Grid_PointerPressed"
+                                  IsHitTestVisible="True">
                                 <Grid.ContextFlyout>
                                     <ui:FAMenuFlyout Opening="ItemContextFlyout_Opening" />
                                 </Grid.ContextFlyout>
