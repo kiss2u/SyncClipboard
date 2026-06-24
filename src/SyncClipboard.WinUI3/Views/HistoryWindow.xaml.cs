@@ -48,12 +48,14 @@ public sealed partial class HistoryWindow : Window, IWindow
     private readonly WindowManager _windowManger;
     private ScrollViewer? _scrollViewer = null;
     private readonly ICaretPositionProvider _caretPositionProvider;
+    private readonly ILogger _logger;
 
-    public HistoryWindow(ConfigManager configManager, HistoryViewModel viewModel, ICaretPositionProvider caretPositionProvider)
+    public HistoryWindow(ConfigManager configManager, HistoryViewModel viewModel, ICaretPositionProvider caretPositionProvider, ILogger logger)
     {
         _viewModel = viewModel;
         _windowManger = WindowManager.Get(this);
         _caretPositionProvider = caretPositionProvider;
+        _logger = logger;
         this.ResizeDip(_viewModel.Width, _viewModel.Height);
 
         InitializeComponent();
@@ -405,7 +407,8 @@ public sealed partial class HistoryWindow : Window, IWindow
 
         if (!key.HasValue)
         {
-            throw new NotSupportedException($"WinUI3 VirtualKey '{e.Key}' is not supported by KeyboardMap. Please add mapping for this key.");
+            _logger.Write($"WinUI3 VirtualKey '{e.Key}' is not supported by KeyboardMap. Please add mapping for this key.");
+            return;
         }
 
         var handled = _viewModel.HandleKeyPress(key.Value, isShiftPressed, isAltPressed, isCtrlPressed);
@@ -450,6 +453,12 @@ public sealed partial class HistoryWindow : Window, IWindow
 
     private void Grid_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        // 如果事件来自 Image，则跳过处理（Image 有自己的 PointerPressed 处理）
+        if (e.OriginalSource is Image)
+        {
+            return;
+        }
+
         e.Handled = false;
         var clickedItem = (HistoryRecordVM)((Grid?)sender)?.DataContext!;
         if ((HistoryRecordVM?)_ListView.SelectedValue != clickedItem)
@@ -472,9 +481,9 @@ public sealed partial class HistoryWindow : Window, IWindow
         _historyItemEvents.TriggerOriginalEvent();
     }
 
-    private async void Grid_DragStarting(UIElement sender, DragStartingEventArgs e)
+    private async void Item_DragStarting(UIElement sender, DragStartingEventArgs e)
     {
-        var draggedItem = (HistoryRecordVM)((Grid)sender).DataContext;
+        var draggedItem = (HistoryRecordVM)((FrameworkElement)sender).DataContext;
         if (draggedItem == null)
         {
             e.Cancel = true;
@@ -499,9 +508,8 @@ public sealed partial class HistoryWindow : Window, IWindow
         }
     }
 
-    private void Image_PointerPressed(object sender, PointerRoutedEventArgs e)
+    private void Image_PointerPressed(object sender, PointerRoutedEventArgs _)
     {
-        e.Handled = true;
         var clickedItem = (HistoryRecordVM)((Image?)sender)?.DataContext!;
         if ((HistoryRecordVM?)_ListView.SelectedValue != clickedItem)
         {

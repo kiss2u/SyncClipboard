@@ -27,12 +27,14 @@ public partial class HistoryWindow : Window, IWindow
 {
     private readonly HistoryViewModel _viewModel;
     private readonly ICaretPositionProvider _caretPositionProvider;
+    private readonly ILogger _logger;
     public HistoryViewModel ViewModel => _viewModel;
     private bool _firstShow = true;
     public HistoryWindow()
     {
         _viewModel = App.Current.Services.GetRequiredService<HistoryViewModel>();
         _caretPositionProvider = App.Current.Services.GetRequiredService<ICaretPositionProvider>();
+        _logger = App.Current.Services.GetRequiredService<ILogger>();
         var configManager = App.Current.Services.GetRequiredService<ConfigManager>();
         DataContext = ViewModel;
 
@@ -104,7 +106,8 @@ public partial class HistoryWindow : Window, IWindow
 
         if (!key.HasValue)
         {
-            throw new NotSupportedException($"Avalonia key '{e.Key}' is not supported by KeyboardMap. Please add mapping for this key.");
+            _logger.Write($"Avalonia key '{e.Key}' is not supported by KeyboardMap. Please add mapping for this key.");
+            return;
         }
 
         var handled = _viewModel.HandleKeyPress(key.Value, isShiftPressed, isAltPressed, isCtrlPressed);
@@ -323,8 +326,13 @@ public partial class HistoryWindow : Window, IWindow
         _viewModel.HandleItemDoubleClick(record);
     }
 
-    private async void Grid_PointerPressed(object? sender, PointerPressedEventArgs e)
+    private void Grid_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
         var clickedItem = ((Grid?)sender)?.DataContext as HistoryRecordVM;
         if (clickedItem == null)
         {
@@ -342,27 +350,80 @@ public partial class HistoryWindow : Window, IWindow
                 return;
             }
 
-            // 左键：启动拖拽
+            // 左键：记录起始位置，等待拖拽阈值
+            // 不设置 e.Handled = true，让 ListBox 正常处理选择
             if (properties.IsLeftButtonPressed)
             {
-                try
-                {
-                    // Avalonia: 创建DataObject并填充数据
-                    var dataObject = new DataObject();
-                    var success = await _viewModel.FillDragPackage(dataObject, clickedItem, CancellationToken.None);
-                    if (success)
-                    {
-                        var result = await DragDrop.DoDragDrop(
-                            e,
-                            dataObject,
-                            Avalonia.Input.DragDropEffects.Copy);
-                    }
-                }
-                catch
-                {
-                    // 拖拽失败，忽略
-                }
+                _isPendingDrag = true;
+                _dragStartPoint = e.GetPosition(null);
+                _pendingDragItem = clickedItem;
+                _dragSource = sender as Control;
+                e.Pointer.Capture((IInputElement)sender!);
             }
+        }
+    }
+
+    private async void Grid_PointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        if (!_isPendingDrag || _pendingDragItem == null || _dragSource == null)
+            return;
+
+        var currentPoint = e.GetPosition(null);
+        var delta = currentPoint - _dragStartPoint;
+
+        // 检查是否超过拖拽阈值
+        if (Math.Abs(delta.X) < DragThreshold && Math.Abs(delta.Y) < DragThreshold)
+            return;
+
+        // 开始拖拽，此时阻止默认行为
+        e.Handled = true;
+        _isPendingDrag = false;
+        var item = _pendingDragItem;
+        _pendingDragItem = null;
+
+        // 释放指针捕获并清理状态
+        e.Pointer.Capture(null);
+        _dragSource = null;
+
+        try
+        {
+            // Avalonia 11.3+: 使用 DataTransfer API
+            var dataTransfer = new DataTransfer();
+            var success = await _viewModel.FillDragPackage(dataTransfer, item, CancellationToken.None);
+            if (success)
+            {
+                var result = await DragDrop.DoDragDropAsync(
+                    e,
+                    dataTransfer,
+                    Avalonia.Input.DragDropEffects.Copy);
+            }
+        }
+        catch
+        {
+            // 拖拽失败，忽略
+        }
+    }
+
+    private void Grid_PointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        if (_isPendingDrag)
+        {
+            // 只是点击，没有触发拖拽，释放指针捕获，不阻止事件
+            _isPendingDrag = false;
+            _pendingDragItem = null;
+            _dragSource = null;
+            e.Pointer.Capture(null);
+            // 不设置 e.Handled = true，让 ListBox 正常处理选择
         }
     }
 
@@ -543,6 +604,13 @@ public partial class HistoryWindow : Window, IWindow
     private bool _isDraggingSplitter = false;
     private double _splitterStartX = 0;
     private int _splitterStartWidth = 0;
+
+    // 列表项拖拽相关
+    private const double DragThreshold = 4; // 拖拽阈值（像素）
+    private bool _isPendingDrag = false;
+    private Point _dragStartPoint;
+    private HistoryRecordVM? _pendingDragItem;
+    private Control? _dragSource;
 
     private void PreviewSplitter_PointerEntered(object sender, PointerEventArgs e)
     {

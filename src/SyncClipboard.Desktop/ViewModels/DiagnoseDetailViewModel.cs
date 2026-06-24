@@ -22,6 +22,8 @@ internal partial class DiagnoseDetailViewModel : ObservableObject
     private bool isText;
     [ObservableProperty]
     private bool isString;
+    [ObservableProperty]
+    private bool isNumber;
 
     [ObservableProperty]
     private string? csharpString;
@@ -49,6 +51,7 @@ internal partial class DiagnoseDetailViewModel : ObservableObject
         IsImage = false;
         IsString = false;
         IsText = false;
+        IsNumber = false;
         CsharpString = null;
         Ansi = null;
         Utf8 = null;
@@ -68,6 +71,19 @@ internal partial class DiagnoseDetailViewModel : ObservableObject
             {
                 IsString = true;
                 CsharpString = str;
+            }
+
+            if (clipboard is int intValue)
+            {
+                IsNumber = true;
+                Int_32 = intValue;
+                Uint_32 = unchecked((uint)intValue);
+            }
+            else if (clipboard is uint uintValue)
+            {
+                IsNumber = true;
+                Int_32 = unchecked((int)uintValue);
+                Uint_32 = uintValue;
             }
 
             await ProcessImageBytes(clipboard);

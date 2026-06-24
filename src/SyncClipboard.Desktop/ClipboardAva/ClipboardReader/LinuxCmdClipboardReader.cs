@@ -1,3 +1,6 @@
+using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
+using SyncClipboard.Core.Interfaces;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -5,9 +8,6 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using SyncClipboard.Core.Interfaces;
-using SyncClipboard.Core.Utilities;
 
 namespace SyncClipboard.Desktop.ClipboardAva.ClipboardReader;
 
@@ -58,6 +58,10 @@ public class LinuxCmdClipboardReader : IClipboardReader
         return await GetDataAsync(Format.TEXT, token) as string;
     }
 
+    // Linux 命令行读取器不支持 Bitmap 和 Files，返回 null
+    public Task<Bitmap?> GetBitmapAsync(CancellationToken token) => Task.FromResult<Bitmap?>(null);
+    public Task<IStorageItem[]?> GetFilesAsync(CancellationToken token) => Task.FromResult<IStorageItem[]?>(null);
+
     public async Task<object?> GetDataAsync(string format, CancellationToken token)
     {
         if (format == Format.Targets)
@@ -79,7 +83,6 @@ public class LinuxCmdClipboardReader : IClipboardReader
         var timeStampStr = Encoding.UTF8.GetString(textBytes);
         return int.TryParse(timeStampStr, out var timeStamp) ? timeStamp : BitConverter.ToInt32(textBytes);
     }
-
 
     public async Task<object?> CheckAndGetDataByParasAsync(string parameters, CancellationToken token)
     {
