@@ -6,6 +6,7 @@ using SyncClipboard.Core.Clipboard;
 using SyncClipboard.Core.Interfaces;
 using SyncClipboard.Desktop.ClipboardAva;
 using SyncClipboard.Desktop.ClipboardAva.ClipboardReader;
+using SyncClipboard.Desktop.ClipboardAva.Fingerprint;
 using SyncClipboard.Desktop.Utilities;
 using SyncClipboard.Desktop.Utilities.Fake;
 using SyncClipboard.Desktop.Views;
@@ -31,6 +32,20 @@ public class AppServices
         services.AddSingleton<IContextMenu, TrayIconContextMenu>();
         services.AddSingleton<MultiSourceClipboardReader>();
         services.AddSingleton<IClipboardReader, AvaloniaClipboardReader>();
+
+        // 注册剪贴板指纹提供者
+        if (OperatingSystem.IsLinux())
+        {
+            services.AddSingleton<IClipboardFingerprintProvider, LinuxClipboardFingerprintProvider>();
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+            services.AddSingleton<IClipboardFingerprintProvider, MacOSClipboardFingerprintProvider>();
+        }
+        else if (OperatingSystem.IsWindows())
+        {
+            services.AddSingleton<IClipboardFingerprintProvider, WindowsClipboardFingerprintProvider>();
+        }
 
         services.AddSingleton<IClipboardFactory, ClipboardFactory>();
         services.AddSingleton<ClipboardListener>();

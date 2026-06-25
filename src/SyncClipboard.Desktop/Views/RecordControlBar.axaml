@@ -28,12 +28,12 @@
                 <ui:FontIcon Glyph="&#xE896;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
             </Button>
 
-            <!-- Cancel download button with progress -->
+            <!-- Cancel download button with progress ring -->
             <Button Click="CancelDownloadButtonClicked" IsVisible="{Binding Record.ShowDownloadProgress, ElementName=_RecordControlBar}">
-                <ProgressBar Width="16"
-                             Height="16"
-                             IsIndeterminate="{Binding Record.IsDownloadPending, ElementName=_RecordControlBar}"
-                             Value="{Binding Record.DownloadProgress, ElementName=_RecordControlBar}" />
+                <ui:ProgressRing Width="16"
+                                 Height="16"
+                                 IsIndeterminate="{Binding Record.IsDownloadPending, ElementName=_RecordControlBar}"
+                                 Value="{Binding Record.DownloadProgress, ElementName=_RecordControlBar}" />
             </Button>
 
             <!-- Upload button -->
@@ -41,12 +41,12 @@
                 <ui:FontIcon Glyph="&#xE898;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
             </Button>
 
-            <!-- Cancel upload button with progress -->
+            <!-- Cancel upload button with progress ring -->
             <Button Click="CancelUploadButtonClicked" IsVisible="{Binding Record.ShowUploadProgress, ElementName=_RecordControlBar}">
-                <ProgressBar Width="16"
-                             Height="16"
-                             IsIndeterminate="{Binding Record.IsUploadPending, ElementName=_RecordControlBar}"
-                             Value="{Binding Record.UploadProgress, ElementName=_RecordControlBar}" />
+                <ui:ProgressRing Width="16"
+                                 Height="16"
+                                 IsIndeterminate="{Binding Record.IsUploadPending, ElementName=_RecordControlBar}"
+                                 Value="{Binding Record.UploadProgress, ElementName=_RecordControlBar}" />
             </Button>
         </StackPanel>
 
