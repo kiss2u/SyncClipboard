@@ -99,7 +99,9 @@ internal class StorageBasedServerHelper(IServiceProvider sp, IStorageBasedServer
             ex is HttpRequestException { StatusCode: HttpStatusCode.NotFound } ||
             ex is ArgumentException)
         {
-            return await UploadAndReturnBlankProfile(cancellationToken);
+            await UploadAndReturnBlankProfile(cancellationToken);
+            var a = await GetProfileAsync(cancellationToken);
+            return a;
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {

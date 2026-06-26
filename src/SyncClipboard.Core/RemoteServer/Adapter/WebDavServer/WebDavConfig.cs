@@ -22,6 +22,9 @@ public record WebDavConfig : IAdapterConfig<WebDavConfig>
     [PropertyDisplay("DeleteServerTemporaryFileAutoly", Description = "DeletePreviousFilesDescription")]
     public bool DeletePreviousFilesOnPush { get; set; } = true;
 
+    [PropertyDisplay("PreciseDelete", Description = "PreciseDeleteDescription")]
+    public bool PreciseDelete { get; set; } = false;
+
     public string CustomName { get; set; } = string.Empty;
 
     [JsonIgnore]

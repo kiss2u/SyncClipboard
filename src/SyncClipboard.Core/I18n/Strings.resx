@@ -903,6 +903,12 @@ This operation cannot be undone.</value>
   <data name="DeletePreviousFilesDescription" xml:space="preserve">
     <value>Whether to delete old files on the server when pushing new content</value>
   </data>
+  <data name="PreciseDelete" xml:space="preserve">
+    <value>Precise Delete</value>
+  </data>
+  <data name="PreciseDeleteDescription" xml:space="preserve">
+    <value>When enabled, temporary files will be queried first and then deleted one by one</value>
+  </data>
   <data name="TestConnection" xml:space="preserve">
     <value>Test Connection</value>
   </data>

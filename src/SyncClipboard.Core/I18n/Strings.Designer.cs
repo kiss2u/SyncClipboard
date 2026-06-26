@@ -1925,6 +1925,24 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 Precise Delete 的本地化字符串。
+        /// </summary>
+        public static string PreciseDelete {
+            get {
+                return ResourceManager.GetString("PreciseDelete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 When enabled, temporary files will be queried first and then deleted one by one 的本地化字符串。
+        /// </summary>
+        public static string PreciseDeleteDescription {
+            get {
+                return ResourceManager.GetString("PreciseDeleteDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Preparing 的本地化字符串。
         /// </summary>
         public static string Preparing {

@@ -901,6 +901,12 @@ Esc：关闭面板</value>
   <data name="DeletePreviousFilesDescription" xml:space="preserve">
     <value>推送新内容时是否删除服务器上的旧文件</value>
   </data>
+  <data name="PreciseDelete" xml:space="preserve">
+    <value>精准删除</value>
+  </data>
+  <data name="PreciseDeleteDescription" xml:space="preserve">
+    <value>启用后，删除临时文件时将先查询所有临时文件然后逐个删除</value>
+  </data>
   <data name="TestConnection" xml:space="preserve">
     <value>测试连接</value>
   </data>

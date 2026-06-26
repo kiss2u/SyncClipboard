@@ -113,7 +113,16 @@ public sealed class WebDavAdapter : IServerAdapter<WebDavConfig>, IStorageBasedS
 
     public async Task CleanupTempFilesAsync(CancellationToken token = default)
     {
-        if (_webDavConfig.DeletePreviousFilesOnPush)
+        if (!_webDavConfig.DeletePreviousFilesOnPush)
+        {
+            return;
+        }
+
+        if (_webDavConfig.PreciseDelete)
+        {
+            await CleanupTempFilesPreciselyAsync(token);
+        }
+        else
         {
             try
             {
@@ -127,6 +136,43 @@ public sealed class WebDavAdapter : IServerAdapter<WebDavConfig>, IStorageBasedS
             if (!await _webDav.DirectoryExist(RemoteFileFolder, token))
             {
                 await _webDav.CreateDirectory(RemoteFileFolder, token);
+            }
+        }
+    }
+
+    private async Task CleanupTempFilesPreciselyAsync(CancellationToken token = default)
+    {
+        if (!await _webDav.DirectoryExist(RemoteFileFolder, token))
+        {
+            await _webDav.CreateDirectory(RemoteFileFolder, token);
+            return;
+        }
+
+        var subList = await _webDav.GetFolderSubList(RemoteFileFolder, token);
+        foreach (var node in subList)
+        {
+            token.ThrowIfCancellationRequested();
+            if (node.IsFolder)
+            {
+                try
+                {
+                    await _webDav.DirectoryDelete(node.FullPath, token);
+                }
+                catch when (token.IsCancellationRequested == false)
+                {
+                    // 忽略删除失败的情况
+                }
+            }
+            else
+            {
+                try
+                {
+                    await _webDav.Delete(node.FullPath, token);
+                }
+                catch when (token.IsCancellationRequested == false)
+                {
+                    // 忽略删除失败的情况
+                }
             }
         }
     }

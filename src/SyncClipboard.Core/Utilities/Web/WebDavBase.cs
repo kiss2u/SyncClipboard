@@ -258,6 +258,7 @@ namespace SyncClipboard.Core.Utilities.Web
         {
             var token = AdjustCancelToken(cancelToken);
             var requestMessage = new HttpRequestMessage(new HttpMethod("PROPFIND"), url);
+            requestMessage.Headers.Add("Depth", "1");
             var res = await HttpClient.SendAsync(requestMessage, token);
             res.EnsureSuccessStatusCode();
 
@@ -265,19 +266,51 @@ namespace SyncClipboard.Core.Utilities.Web
 
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(await res.Content.ReadAsStringAsync(token));
-            const string ns = "DAV:";
-            XmlNodeList elemList = doc.GetElementsByTagName("response", ns);
+
+            XmlNamespaceManager namespaceManager = new(doc.NameTable);
+            namespaceManager.AddNamespace("d", "DAV:");
+
+            XmlNodeList? elemList = doc.SelectNodes("//d:response", namespaceManager);
+            if (elemList is null || elemList.Count == 0)
+            {
+                return list;
+            }
             foreach (XmlNode elem in elemList)
             {
-                var fullPath = elem["d:href"]!.InnerText;
-                var relativePath = fullPath[Prefix.Length..];
-                var subName = relativePath[url.Length..];
-                subName = subName.Trim('/');
-                if (!string.IsNullOrEmpty(subName))
+                var hrefNode = elem.SelectSingleNode("d:href", namespaceManager);
+                if (hrefNode is null)
                 {
-                    var isFolder = elem["propstat", ns]?["prop", ns]?["resourcetype", ns]?["collection", ns];
-                    list.Add(new(relativePath, HttpUtility.UrlDecode(subName), isFolder is not null));
+                    continue;
                 }
+
+                var fullPath = hrefNode.InnerText.Trim();
+                if (string.IsNullOrEmpty(fullPath))
+                {
+                    continue;
+                }
+
+                var relativePath = fullPath.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase)
+                    ? fullPath[Prefix.Length..].Trim('/')
+                    : new Uri(fullPath).AbsolutePath.Trim('/');
+
+                var urlPath = url.Trim('/');
+                string subName;
+                if (relativePath.StartsWith(urlPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    subName = relativePath[urlPath.Length..].Trim('/');
+                }
+                else
+                {
+                    subName = relativePath;
+                }
+
+                if (string.IsNullOrEmpty(subName))
+                {
+                    continue;
+                }
+
+                var isFolder = elem.SelectSingleNode("d:propstat/d:prop/d:resourcetype/d:collection", namespaceManager) is not null;
+                list.Add(new(relativePath, HttpUtility.UrlDecode(subName), isFolder));
             }
             return list;
         }
