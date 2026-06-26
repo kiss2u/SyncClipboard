@@ -88,7 +88,7 @@ internal class StorageBasedServerHelper(IServiceProvider sp, IStorageBasedServer
             var profileDto = await _serverAdapter.GetProfileAsync(cancellationToken);
             if (profileDto == null)
             {
-                return await UploadAndReturnBlankProfile(cancellationToken);
+                return new TextProfile("");
             }
 
             _trayIcon.SetStatusString(ServerConstants.StatusName, "Running.");
@@ -99,28 +99,11 @@ internal class StorageBasedServerHelper(IServiceProvider sp, IStorageBasedServer
             ex is HttpRequestException { StatusCode: HttpStatusCode.NotFound } ||
             ex is ArgumentException)
         {
-            await UploadAndReturnBlankProfile(cancellationToken);
-            var a = await GetProfileAsync(cancellationToken);
-            return a;
+            return new TextProfile("");
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             ThrowServerException("Failed to get remote profile", ex);
-            return null!;
-        }
-    }
-
-    public async Task<Profile> UploadAndReturnBlankProfile(CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var blankProfile = new TextProfile("");
-            await SetProfileAsync(blankProfile, cancellationToken: cancellationToken);
-            return blankProfile;
-        }
-        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-        {
-            ThrowServerException("Failed to set blank profile", ex);
             return null!;
         }
     }
