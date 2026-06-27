@@ -218,7 +218,7 @@ public partial class SyncSettingViewModel : ObservableObject
     [RelayCommand]
     private void SetClipboardOwnerFilter()
     {
-        _mainVM.NavigateToNextLevel(PageDefinition.ClipboardOwnerFilterSetting);
+        _mainVM.NavigateToNextLevel(PageDefinition.ClipboardOwnerFilterSetting, ConfigKey.GetKeyFromType<ClipboardOwnerFilterConfig>());
     }
 
     [RelayCommand]

@@ -302,7 +302,7 @@ namespace SyncClipboard.Core
             services.AddTransient<AddAccountViewModel>();
             services.AddTransient<AccountConfigEditViewModel>();
             services.AddTransient<FileSyncFilterSettingViewModel>();
-            services.AddTransient<ClipboardOwnerFilterSettingViewModel>();
+            services.AddSingleton<ClipboardOwnerFilterSettingViewModel>();
             services.AddTransient<ClipboardAcquisitionRulesViewModel>();
             services.AddTransient<ProxySettingViewModel>();
             services.AddSingleton<ServiceStatusViewModel>();

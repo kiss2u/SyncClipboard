@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using SyncClipboard.Core.Commons;
 using SyncClipboard.Core.Models.UserConfigs;
 
@@ -29,10 +30,18 @@ public partial class CliboardAssistantViewModel : ObservableObject
     }
 
     private readonly ConfigManager _configManager;
+    private readonly MainViewModel _mainVM;
 
-    public CliboardAssistantViewModel(ConfigManager configManager)
+    [RelayCommand]
+    private void SetEasyCopyImageFilter()
+    {
+        _mainVM.NavigateToNextLevel(PageDefinition.ClipboardOwnerFilterSetting, ConfigKey.EasyCopyImageFilter);
+    }
+
+    public CliboardAssistantViewModel(ConfigManager configManager, MainViewModel mainVM)
     {
         _configManager = configManager;
+        _mainVM = mainVM;
 
         _configManager.ListenConfig<ClipboardAssistConfig>(config => ClipboardAssistConfig = config);
         clipboardAssistConfig = _configManager.GetConfig<ClipboardAssistConfig>();

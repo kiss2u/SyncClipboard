@@ -10,6 +10,7 @@ abstract public class ClipboardHander : Service
     public abstract string SERVICE_NAME { get; }
     public abstract string LOG_TAG { get; }
     protected abstract bool SwitchOn { get; set; }
+    protected virtual bool ToggleMenuSwitchOn { get => SwitchOn; set => SwitchOn = value; }
     protected ILogger Logger { get; }
 
     private readonly IServiceProvider sp = AppCore.Current.Services;
@@ -33,7 +34,7 @@ abstract public class ClipboardHander : Service
         Logger.Write(LOG_TAG, $"Service: {SERVICE_NAME} started");
         if (EnableToggleMenuItem)
         {
-            ToggleMenuItem = new ToggleMenuItem(SERVICE_NAME, false, (status) => SwitchOn = status);
+            ToggleMenuItem = new ToggleMenuItem(SERVICE_NAME, ToggleMenuSwitchOn, (status) => ToggleMenuSwitchOn = status);
             ContextMenu?.AddMenuItem(ToggleMenuItem, ContextMenuGroupName);
         }
         Load();
@@ -55,7 +56,7 @@ abstract public class ClipboardHander : Service
     {
         if (ToggleMenuItem is not null)
         {
-            ToggleMenuItem.Checked = SwitchOn;
+            ToggleMenuItem.Checked = ToggleMenuSwitchOn;
         }
     }
 

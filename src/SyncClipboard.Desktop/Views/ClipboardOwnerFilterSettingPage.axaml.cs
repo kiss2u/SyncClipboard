@@ -31,6 +31,8 @@ public partial class ClipboardOwnerFilterSettingPage : UserControl
 
     private void OnNavigatedTo(object? sender, NavigationEventArgs e)
     {
+        if (e.Parameter is not string configKey) throw new System.ArgumentException("Clipboard owner filter setting requires a config key.", nameof(e));
+        _viewModel.UseConfig(configKey);
         App.Current.MainWindow.DispableScrollViewer();
     }
 

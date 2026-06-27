@@ -443,7 +443,7 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
-        ///   查找类似 Clipboard Content Source Filter 的本地化字符串。
+        ///   查找类似 Clipboard Source App Filter 的本地化字符串。
         /// </summary>
         public static string ClipboardOwnerFilter {
             get {
@@ -900,6 +900,24 @@ namespace SyncClipboard.Core.I18n {
         public static string DownloadWebImageDescription {
             get {
                 return ResourceManager.GetString("DownloadWebImageDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Easy Copy Image 的本地化字符串。
+        /// </summary>
+        public static string EasyCopyImage {
+            get {
+                return ResourceManager.GetString("EasyCopyImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Easy Copy Image Source App Filter 的本地化字符串。
+        /// </summary>
+        public static string EasyCopyImageFilter {
+            get {
+                return ResourceManager.GetString("EasyCopyImageFilter", resourceCulture);
             }
         }
         
@@ -1556,7 +1574,7 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
-        ///   查找类似 Local Clipboard Source 的本地化字符串。
+        ///   查找类似 Clipboard Tool Source 的本地化字符串。
         /// </summary>
         public static string LocalClipboardSource {
             get {
@@ -2447,11 +2465,11 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
-        ///   查找类似 Switch On/Off Image Assistant 的本地化字符串。
+        ///   查找类似 Switch On/Off Easy Copy Image 的本地化字符串。
         /// </summary>
-        public static string SwitchImageAssistant {
+        public static string SwitchEasyCopyImage {
             get {
-                return ResourceManager.GetString("SwitchImageAssistant", resourceCulture);
+                return ResourceManager.GetString("SwitchEasyCopyImage", resourceCulture);
             }
         }
         
@@ -2474,11 +2492,11 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
-        ///   查找类似 Switch Off Image Assistant 的本地化字符串。
+        ///   查找类似 Switch Off Easy Copy Image 的本地化字符串。
         /// </summary>
-        public static string SwitchOffImageAssistant {
+        public static string SwitchOffEasyCopyImage {
             get {
-                return ResourceManager.GetString("SwitchOffImageAssistant", resourceCulture);
+                return ResourceManager.GetString("SwitchOffEasyCopyImage", resourceCulture);
             }
         }
         
@@ -2501,11 +2519,11 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
-        ///   查找类似 Switch On Image Assistant 的本地化字符串。
+        ///   查找类似 Switch On Easy Copy Image 的本地化字符串。
         /// </summary>
-        public static string SwitchOnImageAssistant {
+        public static string SwitchOnEasyCopyImage {
             get {
-                return ResourceManager.GetString("SwitchOnImageAssistant", resourceCulture);
+                return ResourceManager.GetString("SwitchOnEasyCopyImage", resourceCulture);
             }
         }
         

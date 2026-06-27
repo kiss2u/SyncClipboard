@@ -219,6 +219,12 @@
   <data name="ImageAssistant" xml:space="preserve">
     <value>Image Assistant</value>
   </data>
+  <data name="EasyCopyImage" xml:space="preserve">
+    <value>Easy Copy Image</value>
+  </data>
+  <data name="EasyCopyImageFilter" xml:space="preserve">
+    <value>Easy Copy Image Source App Filter</value>
+  </data>
   <data name="ImageAssistantDescription" xml:space="preserve">
     <value>Paste image to a textbox directly after copying a image file from file system, and vice versa</value>
   </data>
@@ -502,14 +508,14 @@ Middle click: Copy and paste</value>
   <data name="SwitchBuiltInServer" xml:space="preserve">
     <value>Switch On/Off Built In Server</value>
   </data>
-  <data name="SwitchImageAssistant" xml:space="preserve">
-    <value>Switch On/Off Image Assistant</value>
+  <data name="SwitchEasyCopyImage" xml:space="preserve">
+    <value>Switch On/Off Easy Copy Image</value>
   </data>
-  <data name="SwitchOnImageAssistant" xml:space="preserve">
-    <value>Switch On Image Assistant</value>
+  <data name="SwitchOnEasyCopyImage" xml:space="preserve">
+    <value>Switch On Easy Copy Image</value>
   </data>
-  <data name="SwitchOffImageAssistant" xml:space="preserve">
-    <value>Switch Off Image Assistant</value>
+  <data name="SwitchOffEasyCopyImage" xml:space="preserve">
+    <value>Switch Off Easy Copy Image</value>
   </data>
   <data name="System" xml:space="preserve">
     <value>System</value>
@@ -593,7 +599,7 @@ Middle click: Copy and paste</value>
     <value>Each file extension per line</value>
   </data>
   <data name="ClipboardOwnerFilter" xml:space="preserve">
-    <value>Clipboard Content Source Filter</value>
+    <value>Clipboard Source App Filter</value>
   </data>
   <data name="ClipboardOwnerFilterDescription" xml:space="preserve">
     <value>All fields must match to filter, leave empty to ignore</value>
@@ -1018,7 +1024,7 @@ This operation cannot be undone.</value>
     <value>Optional. If set, this name will be displayed instead of the auto-generated identifier.</value>
   </data>
   <data name="LocalClipboardSource" xml:space="preserve">
-    <value>Local Clipboard Source</value>
+    <value>Clipboard Tool Source</value>
   </data>
   <data name="ClipboardAcquisitionRules" xml:space="preserve">
     <value>Local Clipboard Acquisition Rules</value>

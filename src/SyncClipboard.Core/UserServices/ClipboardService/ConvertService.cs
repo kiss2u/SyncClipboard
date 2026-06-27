@@ -68,12 +68,8 @@ public class ConvertService : ClipboardHander
         _configManager.ListenConfig<ClipboardAssistConfig>(config => _clipboardConfig = config);
     }
 
-    private bool NeedAdjust(ClipboardMetaInfomation metaInfo)
+    private static bool NeedAdjust(ClipboardMetaInfomation metaInfo)
     {
-        if (_clipboardConfig.EasyCopyImageSwitchOn == false)
-        {
-            return false;
-        }
 
         if (metaInfo.Files is null)
         {

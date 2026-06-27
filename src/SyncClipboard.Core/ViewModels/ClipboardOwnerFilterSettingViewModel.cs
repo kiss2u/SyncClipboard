@@ -10,7 +10,7 @@ using System.Collections.ObjectModel;
 
 namespace SyncClipboard.Core.ViewModels;
 
-public partial class ClipboardOwnerFilterSettingViewModel : ObservableObject
+public partial class ClipboardOwnerFilterSettingViewModel(ConfigManager configManager, IClipboardChangingListener clipboardChangingListener) : ObservableObject
 {
     public static readonly LocaleString<string>[] Modes =
     [
@@ -33,7 +33,8 @@ public partial class ClipboardOwnerFilterSettingViewModel : ObservableObject
     {
         FilterMode = Modes.FirstOrDefault(x => x.Key == FilterConfig.FilterMode) ?? Modes[0];
         UpdateFilterList();
-        _configManager.SetConfig(value);
+        ArgumentNullException.ThrowIfNull(_configKey);
+        _configManager.SetConfig(_configKey, value);
     }
 
     [ObservableProperty]
@@ -43,13 +44,43 @@ public partial class ClipboardOwnerFilterSettingViewModel : ObservableObject
     [ObservableProperty]
     private bool isListening = false;
 
-    public string? Description => EnableText ? I18n.Strings.ClipboardOwnerFilterDescription : null;
+    public string? Description => EnableText ? Strings.ClipboardOwnerFilterDescription : null;
 
     public ObservableCollection<EditableWindowInfo> FilterList { get; } = [];
 
     public event Action<ForegroundWindowInfo>? OnClipboardOwnerCaptured;
 
     private bool _isUpdating = false;
+
+    private readonly HashSet<string> _listenedConfigKeys = [];
+    private string? _configKey;
+
+    public void UseConfig(string configKey)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(configKey);
+
+        if (_listenedConfigKeys.Add(configKey))
+        {
+            _configManager.ListenConfig<ClipboardOwnerFilterConfig>(configKey, config =>
+            {
+                if (_configKey == configKey)
+                {
+                    FilterConfig = config;
+                }
+            });
+        }
+
+        _configKey = configKey;
+        LoadCurrentConfig();
+    }
+
+    private void LoadCurrentConfig()
+    {
+        ArgumentNullException.ThrowIfNull(_configKey);
+        FilterConfig = _configManager.GetConfig<ClipboardOwnerFilterConfig>(_configKey) ?? new();
+        FilterMode = Modes.FirstOrDefault(x => x.Key == FilterConfig.FilterMode) ?? Modes[0];
+        UpdateFilterList();
+    }
 
     private void UpdateFilterList()
     {
@@ -159,15 +190,8 @@ public partial class ClipboardOwnerFilterSettingViewModel : ObservableObject
         }
     }
 
-    private readonly ConfigManager _configManager;
-    private readonly IClipboardChangingListener _clipboardChangingListener;
-
-    public ClipboardOwnerFilterSettingViewModel(ConfigManager configManager, IClipboardChangingListener clipboardChangingListener)
-    {
-        _configManager = configManager;
-        _clipboardChangingListener = clipboardChangingListener;
-        configManager.GetAndListenConfig<ClipboardOwnerFilterConfig>(config => FilterConfig = config);
-    }
+    private readonly ConfigManager _configManager = configManager;
+    private readonly IClipboardChangingListener _clipboardChangingListener = clipboardChangingListener;
 }
 
 public partial class EditableWindowInfo : ObservableObject

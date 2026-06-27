@@ -6,6 +6,7 @@ using SyncClipboard.Core.Interfaces;
 using SyncClipboard.Core.Models;
 using SyncClipboard.Core.Models.UserConfigs;
 using SyncClipboard.Core.UserServices.ClipboardService;
+using SyncClipboard.Core.Utilities;
 using SyncClipboard.Core.Utilities.Image;
 using SyncClipboard.Core.ViewModels;
 using System.Text.RegularExpressions;
@@ -16,7 +17,7 @@ public partial class EasyCopyImageSerivce : ClipboardHander
 {
     #region override ClipboardHander
 
-    public override string SERVICE_NAME => I18n.Strings.ImageAssistant;
+    public override string SERVICE_NAME => I18n.Strings.EasyCopyImage;
     public override string LOG_TAG => "EASY IMAGE";
 
     private const string STOPPED_STATUS = "Stopped.";
@@ -24,13 +25,15 @@ public partial class EasyCopyImageSerivce : ClipboardHander
 
     protected override bool SwitchOn
     {
-        get => _clipboardAssistConfig.EasyCopyImageSwitchOn;
+        get => _clipboardAssistConfig.EasyCopyImageSwitchOn || _clipboardAssistConfig.DownloadWebImage;
         set
         {
             _clipboardAssistConfig.EasyCopyImageSwitchOn = value;
             _configManager.SetConfig(_clipboardAssistConfig);
         }
     }
+
+    protected override bool ToggleMenuSwitchOn { get => _clipboardAssistConfig.EasyCopyImageSwitchOn; set => SwitchOn = value; }
 
     private bool DownloadWebImageEnabled => _clipboardAssistConfig.DownloadWebImage;
 
@@ -61,18 +64,18 @@ public partial class EasyCopyImageSerivce : ClipboardHander
     {
         Commands = {
             new UniqueCommand(
-                I18n.Strings.SwitchImageAssistant,
+                I18n.Strings.SwitchEasyCopyImage,
                 "337275BE-57A2-2E97-6096-FF3D087D8A9C",
-                () => SwitchImageAssistant(!_clipboardAssistConfig.EasyCopyImageSwitchOn)
+                () => SwitchEasyCopyImage(!_clipboardAssistConfig.EasyCopyImageSwitchOn)
             )
         }
     };
 
-    private void SwitchImageAssistant(bool isOn)
+    private void SwitchEasyCopyImage(bool isOn)
     {
         _configManager.SetConfig(_clipboardAssistConfig with { EasyCopyImageSwitchOn = isOn });
         var notification = _notificationManager.Shared;
-        notification.Title = isOn ? I18n.Strings.SwitchOnImageAssistant : I18n.Strings.SwitchOffImageAssistant;
+        notification.Title = isOn ? I18n.Strings.SwitchOnEasyCopyImage : I18n.Strings.SwitchOffEasyCopyImage;
         notification.Show(new NotificationDeliverOption { Duration = TimeSpan.FromSeconds(2) });
     }
     #endregion Hotkey
@@ -86,6 +89,7 @@ public partial class EasyCopyImageSerivce : ClipboardHander
     private readonly IServiceProvider _serviceProvider;
     private readonly LocalClipboardSetter _localClipboardSetter;
     private ClipboardAssistConfig _clipboardAssistConfig;
+    private ClipboardOwnerFilterConfig _easyCopyImageFilterConfig = new();
     private IHttp Http => _serviceProvider.GetRequiredService<IHttp>();
     private ITrayIcon TrayIcon => _serviceProvider.GetRequiredService<ITrayIcon>();
 
@@ -96,6 +100,7 @@ public partial class EasyCopyImageSerivce : ClipboardHander
         _configManager = _serviceProvider.GetRequiredService<ConfigManager>();
         _notificationManager = _serviceProvider.GetRequiredService<INotificationManager>();
         _clipboardAssistConfig = _configManager.GetConfig<ClipboardAssistConfig>();
+        _easyCopyImageFilterConfig = _configManager.GetConfig<ClipboardOwnerFilterConfig>(ConfigKey.EasyCopyImageFilter) ?? new();
         _localClipboardSetter = localClipboardSetter;
 
         serviceProvider.GetService<HotkeyManager>()?.RegisterCommands(CommandCollection);
@@ -104,6 +109,7 @@ public partial class EasyCopyImageSerivce : ClipboardHander
     public override void Load()
     {
         _clipboardAssistConfig = _configManager.GetConfig<ClipboardAssistConfig>();
+        _easyCopyImageFilterConfig = _configManager.GetConfig<ClipboardOwnerFilterConfig>(ConfigKey.EasyCopyImageFilter) ?? new();
         var status = SwitchOn ? RUNNING_STATUS : STOPPED_STATUS;
         TrayIcon.SetStatusString(SERVICE_NAME, status);
         base.Load();
@@ -117,12 +123,20 @@ public partial class EasyCopyImageSerivce : ClipboardHander
             return;
         }
 
+        bool shouldAjust = false;
         if (DownloadWebImageEnabled && !string.IsNullOrEmpty(metaInfo.Html))
         {
-            profile = await ProcessImageFromWeb(metaInfo, cancellationToken) ?? profile;
+            var downloadedImageProfile = await ProcessImageFromWeb(metaInfo, cancellationToken);
+            shouldAjust = downloadedImageProfile is not null;
+            profile = downloadedImageProfile ?? profile;
         }
 
-        await AdjustClipboard(profile, cancellationToken);
+        var shouldFilter = ClipboardOwnerFilterHelper.ShouldFilter(_easyCopyImageFilterConfig, metaInfo.Owner);
+        shouldAjust = shouldAjust || (_clipboardAssistConfig.EasyCopyImageSwitchOn && !shouldFilter);
+        if (shouldAjust)
+        {
+            await AdjustClipboard(profile, cancellationToken);
+        }
         TrayIcon.SetStatusString(SERVICE_NAME, RUNNING_STATUS);
     }
 
