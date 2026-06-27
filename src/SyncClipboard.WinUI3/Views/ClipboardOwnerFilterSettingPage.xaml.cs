@@ -17,7 +17,6 @@ public sealed partial class ClipboardOwnerFilterSettingPage : Page
     {
         this.InitializeComponent();
         _viewModel = App.Current.Services.GetRequiredService<ClipboardOwnerFilterSettingViewModel>();
-        _viewModel.OnClipboardOwnerCaptured += OnClipboardOwnerCaptured;
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -32,6 +31,7 @@ public sealed partial class ClipboardOwnerFilterSettingPage : Page
     {
         if (e.Parameter is not string configKey) throw new ArgumentException("Clipboard owner filter setting requires a config key.", nameof(e));
         _viewModel.UseConfig(configKey);
+        _viewModel.OnClipboardOwnerCaptured += OnClipboardOwnerCaptured;
         ((MainWindow)App.Current.Services.GetRequiredService<IMainWindow>()).DispableScrollViewer();
     }
 

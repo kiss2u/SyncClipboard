@@ -19,7 +19,6 @@ public partial class ClipboardOwnerFilterSettingPage : UserControl
         InitializeComponent();
         AddHandler(Frame.NavigatedToEvent, OnNavigatedTo, RoutingStrategies.Direct);
         AddHandler(Frame.NavigatedFromEvent, OnNavigatedFrom, RoutingStrategies.Direct);
-        _viewModel.OnClipboardOwnerCaptured += OnClipboardOwnerCaptured;
     }
 
     private void OnNavigatedFrom(object? sender, NavigationEventArgs e)
@@ -33,6 +32,7 @@ public partial class ClipboardOwnerFilterSettingPage : UserControl
     {
         if (e.Parameter is not string configKey) throw new System.ArgumentException("Clipboard owner filter setting requires a config key.", nameof(e));
         _viewModel.UseConfig(configKey);
+        _viewModel.OnClipboardOwnerCaptured += OnClipboardOwnerCaptured;
         App.Current.MainWindow.DispableScrollViewer();
     }
 
