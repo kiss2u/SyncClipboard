@@ -420,6 +420,9 @@
   <data name="AppDataFolder" xml:space="preserve">
     <value>App Data Folder</value>
   </data>
+  <data name="IndependentDirectory" xml:space="preserve">
+    <value>Independent Directory</value>
+  </data>
   <data name="ChangeFolder" xml:space="preserve">
     <value>Change</value>
   </data>
@@ -699,6 +702,9 @@ Middle click: Copy and paste</value>
   </data>
   <data name="RestoreDefaultFolder" xml:space="preserve">
     <value>Restore Default</value>
+  </data>
+  <data name="RestoreDefaultFolderConfirmMessage" xml:space="preserve">
+    <value>Restore the app data folder to the default location?</value>
   </data>
   <data name="RestoreDefaultFolderConfirm" xml:space="preserve">
     <value>Custom app data path cleared. Click OK to restart immediately.</value>
@@ -1043,6 +1049,21 @@ This operation cannot be undone.</value>
   </data>
   <data name="ChangeAppDataFolderConfirmMessage" xml:space="preserve">
     <value>Do you want to create a "SyncClipboard" subfolder in the selected directory?&#10;&#10;Click "Yes" to use: {0}&#10;Click "No" to use: {1}&#10;Click "Cancel" to abort the operation.</value>
+  </data>
+  <data name="SwitchAppDataFolderConfirmTitle" xml:space="preserve">
+    <value>Switch App Data Folder?</value>
+  </data>
+  <data name="SwitchAppDataFolderConfirmMessage" xml:space="preserve">
+    <value>Switching the app data folder requires copying current data to the new location and restarting the app.&#10;&#10;New location: {0}&#10;&#10;Do you want to continue?</value>
+  </data>
+  <data name="SwitchToIndependentAppDataFolderMessage" xml:space="preserve">
+    <value>Switching to an independent app data folder requires copying current data and restarting the app.&#10;&#10;Choose whether to use the default location or select another folder.</value>
+  </data>
+  <data name="DefaultLocation" xml:space="preserve">
+    <value>Default Location</value>
+  </data>
+  <data name="ChooseLocation" xml:space="preserve">
+    <value>Choose Location</value>
   </data>
   <data name="YesWithSubfolder" xml:space="preserve">
     <value>Yes</value>

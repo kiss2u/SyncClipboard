@@ -420,6 +420,9 @@
   <data name="AppDataFolder" xml:space="preserve">
     <value>应用数据文件夹</value>
   </data>
+  <data name="IndependentDirectory" xml:space="preserve">
+    <value>独立目录</value>
+  </data>
   <data name="ChangeFolder" xml:space="preserve">
     <value>修改</value>
   </data>
@@ -697,6 +700,9 @@ Esc：关闭面板</value>
   </data>
   <data name="RestoreDefaultFolder" xml:space="preserve">
     <value>恢复默认</value>
+  </data>
+  <data name="RestoreDefaultFolderConfirmMessage" xml:space="preserve">
+    <value>确定要将应用数据文件夹恢复到默认位置吗？</value>
   </data>
   <data name="RestoreDefaultFolderConfirm" xml:space="preserve">
     <value>已清除自定义应用数据路径，点击确定立即重启。</value>
@@ -1041,6 +1047,21 @@ Esc：关闭面板</value>
   </data>
   <data name="ChangeAppDataFolderConfirmMessage" xml:space="preserve">
     <value>是否在选中的目录下创建 SyncClipboard 子文件夹？&#10;&#10;点击"是"将使用：{0}&#10;点击"否"将使用：{1}&#10;点击"取消"将放弃此次操作。</value>
+  </data>
+  <data name="SwitchAppDataFolderConfirmTitle" xml:space="preserve">
+    <value>切换应用数据文件夹？</value>
+  </data>
+  <data name="SwitchAppDataFolderConfirmMessage" xml:space="preserve">
+    <value>切换应用数据文件夹需要将当前数据复制到新位置，并重新启动应用。&#10;&#10;新位置：{0}&#10;&#10;是否继续？</value>
+  </data>
+  <data name="SwitchToIndependentAppDataFolderMessage" xml:space="preserve">
+    <value>切换到独立应用数据文件夹需要复制当前数据，并重新启动应用。&#10;&#10;请选择使用默认位置，或手动选择一个位置。</value>
+  </data>
+  <data name="DefaultLocation" xml:space="preserve">
+    <value>默认位置</value>
+  </data>
+  <data name="ChooseLocation" xml:space="preserve">
+    <value>选择位置</value>
   </data>
   <data name="YesWithSubfolder" xml:space="preserve">
     <value>是</value>

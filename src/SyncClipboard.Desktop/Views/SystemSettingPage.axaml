@@ -30,6 +30,36 @@
                         <ToggleSwitch OnContent="{x:Static i18n:Strings.On}" OffContent="{x:Static i18n:Strings.Off}" IsChecked="{Binding HideWindowOnStartUp, Mode=TwoWay}" />
                     </ui:SettingsExpanderItem.Footer>
                 </ui:SettingsExpanderItem>
+                <ui:SettingsExpanderItem Content="{x:Static i18n:Strings.UserConfigLocation}" IsVisible="{Binding ShowPortableLocationSetting}">
+                    <ui:SettingsExpanderItem.Footer>
+                        <ComboBox SelectedItem="{Binding UserConfigPosition, Mode=TwoWay}" ItemsSource="{x:Static vm:SystemSettingViewModel.UserConfigPositions}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="{x:Type m:LocaleString, x:TypeArguments=Sys:Boolean}">
+                                    <TextBlock Text="{Binding ShownString}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </ui:SettingsExpanderItem.Footer>
+                </ui:SettingsExpanderItem>
+                <ui:SettingsExpanderItem Content="{x:Static i18n:Strings.AppDataFolder}" Description="{Binding AppDataDirectory, Mode=OneTime}">
+                    <ui:SettingsExpanderItem.Footer>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding AppDataMoveProgress, Mode=OneWay}" IsVisible="{Binding IsMovingAppData, Mode=OneWay}" VerticalAlignment="Center" />
+                            <Button Command="{Binding RestoreDefaultAppDataFolderCommand}" Content="{x:Static i18n:Strings.RestoreDefaultFolder}" IsVisible="{Binding IsUsingCustomIndependentAppDataDirectory, Mode=OneTime}" />
+                            <Button Click="ChangeAppDataFolder"
+                                    Content="{x:Static i18n:Strings.ChangeFolder}"
+                                    IsEnabled="{Binding !IsMovingAppData, Mode=OneWay}"
+                                    IsVisible="{Binding IsIndependentAppDataDirectory, Mode=OneWay}" />
+                            <ComboBox SelectedItem="{Binding PortableAppDataFolderPosition, Mode=TwoWay}" ItemsSource="{x:Static vm:SystemSettingViewModel.PortableAppDataFolderPositions}" IsVisible="{Binding ShowPortableLocationSetting}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="{x:Type m:LocaleString, x:TypeArguments=Sys:Boolean}">
+                                        <TextBlock Text="{Binding ShownString}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                    </ui:SettingsExpanderItem.Footer>
+                </ui:SettingsExpanderItem>
                 <ui:SettingsExpanderItem Content="{x:Static i18n:Strings.Language}" Description="{Binding ChangingLangInfo, Mode=OneWay}">
                     <ui:SettingsExpanderItem.Footer>
                         <ComboBox SelectedItem="{Binding Language, Mode=TwoWay}" ItemsSource="{x:Static vm:SystemSettingViewModel.Languages}">
@@ -60,15 +90,6 @@
                 <ui:SettingsExpanderItem Content="{x:Static i18n:Strings.Proxy}">
                     <ui:SettingsExpanderItem.Footer>
                         <Button Click="ShowProxySettingDialog" Content="{x:Static i18n:Strings.Config}" />
-                    </ui:SettingsExpanderItem.Footer>
-                </ui:SettingsExpanderItem>
-                <ui:SettingsExpanderItem Content="{x:Static i18n:Strings.AppDataFolder}" Description="{Binding AppDataDirectory, Mode=OneTime}">
-                    <ui:SettingsExpanderItem.Footer>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <TextBlock Text="{Binding AppDataMoveProgress, Mode=OneWay}" IsVisible="{Binding IsMovingAppData, Mode=OneWay}" VerticalAlignment="Center" />
-                            <Button Command="{Binding RestoreDefaultAppDataFolderCommand}" Content="{x:Static i18n:Strings.RestoreDefaultFolder}" IsVisible="{Binding IsUsingCustomAppDataDirectory, Mode=OneTime}" />
-                            <Button Click="ChangeAppDataFolder" Content="{x:Static i18n:Strings.ChangeFolder}" IsEnabled="{Binding !IsMovingAppData, Mode=OneWay}" />
-                        </StackPanel>
                     </ui:SettingsExpanderItem.Footer>
                 </ui:SettingsExpanderItem>
             </ui:SettingsExpander.Items>

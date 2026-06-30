@@ -1,7 +1,10 @@
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform.Storage;
 using FluentAvalonia.UI.Controls;
 using SyncClipboard.Core.I18n;
 using SyncClipboard.Core.Interfaces;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SyncClipboard.Desktop.Services;
@@ -73,5 +76,20 @@ public class AvaloniaDialog : IMainWindowDialog
             ContentDialogResult.Secondary => false,
             _ => null
         };
+    }
+
+    public async Task<string?> PickFolderAsync(string title)
+    {
+        var window = _window
+            ?? (Avalonia.Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+        if (window is null) return null;
+
+        var folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false
+        });
+
+        return folders.Count > 0 ? folders[0].Path.LocalPath : null;
     }
 }

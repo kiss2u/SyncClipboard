@@ -371,6 +371,15 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 Choose Location 的本地化字符串。
+        /// </summary>
+        public static string ChooseLocation {
+            get {
+                return ResourceManager.GetString("ChooseLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Clear 的本地化字符串。
         /// </summary>
         public static string Clear {
@@ -691,6 +700,15 @@ namespace SyncClipboard.Core.I18n {
         public static string DefaultLanguage {
             get {
                 return ResourceManager.GetString("DefaultLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Default Location 的本地化字符串。
+        /// </summary>
+        public static string DefaultLocation {
+            get {
+                return ResourceManager.GetString("DefaultLocation", resourceCulture);
             }
         }
         
@@ -1511,6 +1529,15 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 Independent Directory 的本地化字符串。
+        /// </summary>
+        public static string IndependentDirectory {
+            get {
+                return ResourceManager.GetString("IndependentDirectory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 SyncClipboard is the latest version 的本地化字符串。
         /// </summary>
         public static string ItsLatestVersion {
@@ -2132,6 +2159,15 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 Restore the app data folder to the default location? 的本地化字符串。
+        /// </summary>
+        public static string RestoreDefaultFolderConfirmMessage {
+            get {
+                return ResourceManager.GetString("RestoreDefaultFolderConfirmMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Retry Times 的本地化字符串。
         /// </summary>
         public static string RetryTimes {
@@ -2447,6 +2483,28 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 Switching the app data folder requires copying current data to the new location and restarting the app.
+        ///
+        ///New location: {0}
+        ///
+        ///Do you want to continue? 的本地化字符串。
+        /// </summary>
+        public static string SwitchAppDataFolderConfirmMessage {
+            get {
+                return ResourceManager.GetString("SwitchAppDataFolderConfirmMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Switch App Data Folder? 的本地化字符串。
+        /// </summary>
+        public static string SwitchAppDataFolderConfirmTitle {
+            get {
+                return ResourceManager.GetString("SwitchAppDataFolderConfirmTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Switch On/Off Built In Server 的本地化字符串。
         /// </summary>
         public static string SwitchBuiltInServer {
@@ -2524,6 +2582,17 @@ namespace SyncClipboard.Core.I18n {
         public static string SwitchOnEasyCopyImage {
             get {
                 return ResourceManager.GetString("SwitchOnEasyCopyImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Switching to an independent app data folder requires copying current data and restarting the app.
+        ///
+        ///Choose whether to use the default location or select another folder. 的本地化字符串。
+        /// </summary>
+        public static string SwitchToIndependentAppDataFolderMessage {
+            get {
+                return ResourceManager.GetString("SwitchToIndependentAppDataFolderMessage", resourceCulture);
             }
         }
         

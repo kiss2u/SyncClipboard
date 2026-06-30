@@ -92,7 +92,13 @@ public partial class SystemSettingViewModel : ObservableObject
 
     public static readonly LocaleString<bool>[] UserConfigPositions =
     [
-        new (false, Strings.SystemRecommend),
+        new (false, Strings.AppDataFolder),
+        new (true, Strings.PrograminstallLocation)
+    ];
+
+    public static readonly LocaleString<bool>[] PortableAppDataFolderPositions =
+    [
+        new (false, Strings.IndependentDirectory),
         new (true, Strings.PrograminstallLocation)
     ];
 
@@ -103,20 +109,63 @@ public partial class SystemSettingViewModel : ObservableObject
         _staticConfig.SetConfig(_staticConfig.GetConfig<EnvConfig>() with { PortableUserConfig = value.Key });
     }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsIndependentAppDataDirectory))]
+    [NotifyPropertyChangedFor(nameof(IsUsingCustomIndependentAppDataDirectory))]
+    private LocaleString<bool> portableAppDataFolderPosition;
+    async partial void OnPortableAppDataFolderPositionChanged(LocaleString<bool> value)
+    {
+        try
+        {
+            if (_isInitializingPortableAppDataFolder)
+            {
+                return;
+            }
+
+            if (value.Key == _currentPortableAppDataFolder)
+            {
+                return;
+            }
+
+            var previous = LocaleString<bool>.Match(PortableAppDataFolderPositions, _currentPortableAppDataFolder);
+            var switched = await SwitchPortableAppDataFolderAsync(value.Key);
+            if (switched)
+            {
+                return;
+            }
+
+            _isInitializingPortableAppDataFolder = true;
+            PortableAppDataFolderPosition = previous;
+            _isInitializingPortableAppDataFolder = false;
+        }
+        catch (Exception ex)
+        {
+            _logger.Write(nameof(SystemSettingViewModel), ex.Message);
+            _isInitializingPortableAppDataFolder = true;
+            PortableAppDataFolderPosition = LocaleString<bool>.Match(PortableAppDataFolderPositions, _currentPortableAppDataFolder);
+            _isInitializingPortableAppDataFolder = false;
+        }
+    }
+
     private void OnEnvConfigChanged(EnvConfig envConfig)
     {
         UserConfigPosition = LocaleString<bool>.Match(UserConfigPositions, envConfig.PortableUserConfig);
+        SetPortableAppDataFolderPosition(envConfig.PortableAppDataFolder);
     }
 
     private readonly ConfigManager _configManager;
     private readonly StaticConfig _staticConfig;
     private readonly IServiceProvider _services;
+    private readonly ILogger _logger;
+    private bool _isInitializingPortableAppDataFolder = true;
+    private bool _currentPortableAppDataFolder;
 
     public SystemSettingViewModel(ConfigManager configManager, StaticConfig staticConfig, IServiceProvider serviceProvider)
     {
         _configManager = configManager;
         _staticConfig = staticConfig;
         _services = serviceProvider;
+        _logger = serviceProvider.GetRequiredService<ILogger>();
 
         _configManager.ListenConfig<ProgramConfig>(config => ProgramConfig = config);
         programConfig = _configManager.GetConfig<ProgramConfig>();
@@ -131,13 +180,32 @@ public partial class SystemSettingViewModel : ObservableObject
         _staticConfig.ListenConfig<EnvConfig>(OnEnvConfigChanged);
         var envConfig = _staticConfig.GetConfig<EnvConfig>();
         userConfigPosition = LocaleString<bool>.Match(UserConfigPositions, envConfig.PortableUserConfig);
+
+        _currentPortableAppDataFolder = envConfig.PortableAppDataFolder;
+        portableAppDataFolderPosition = LocaleString<bool>.Match(PortableAppDataFolderPositions, _currentPortableAppDataFolder);
+        _isInitializingPortableAppDataFolder = false;
     }
 
     public bool ShowStartUpSetting { get; } = OperatingSystem.IsWindows() || OperatingSystem.IsLinux();
 
+    public bool ShowPortableLocationSetting { get; } = OperatingSystem.IsWindows();
+
     public static string AppDataDirectory => Env.AppDataDirectory;
 
     public static bool IsUsingCustomAppDataDirectory => Env.IsUsingCustomAppDataDirectory;
+
+    public bool IsIndependentAppDataDirectory => !PortableAppDataFolderPosition.Key;
+
+    public bool IsUsingCustomIndependentAppDataDirectory =>
+        Env.IsUsingCustomAppDataDirectory && !PortableAppDataFolderPosition.Key;
+
+    private void SetPortableAppDataFolderPosition(bool portableAppDataFolder)
+    {
+        _currentPortableAppDataFolder = portableAppDataFolder;
+        _isInitializingPortableAppDataFolder = true;
+        PortableAppDataFolderPosition = LocaleString<bool>.Match(PortableAppDataFolderPositions, portableAppDataFolder);
+        _isInitializingPortableAppDataFolder = false;
+    }
 
     [ObservableProperty]
     private bool isMovingAppData;
@@ -159,20 +227,61 @@ public partial class SystemSettingViewModel : ObservableObject
     /// Called by code-behind after a folder is picked by the user.
     /// Shows confirmation dialog, handles copying, error/success dialogs, and restart prompt.
     /// </summary>
-    public async Task ChangeAppDataFolderAsync(string selectedFolder)
+    public async Task<bool> ChangeAppDataFolderAsync(string selectedFolder)
     {
         var targetFolder = await ConfirmAndResolveTargetFolderAsync(selectedFolder);
-        if (targetFolder is null) return;
+        if (targetFolder is null) return false;
 
         if (Env.IsSamePath(targetFolder, Env.AppDataDirectory))
-            return;
+            return false;
+
+        return await ApplyIndependentAppDataFolderAsync(targetFolder, targetFolder);
+    }
+
+    private async Task<bool> SwitchPortableAppDataFolderAsync(bool portableAppDataFolder)
+    {
+        if (!portableAppDataFolder)
+        {
+            return await SwitchToIndependentAppDataFolderAsync();
+        }
+
+        var targetFolder = Env.PortableAppDataDirectory;
 
         var dialog = _services.GetRequiredService<IMainWindowDialog>();
+        var confirmed = await dialog.ShowConfirmationAsync(
+            Strings.SwitchAppDataFolderConfirmTitle,
+            string.Format(Strings.SwitchAppDataFolderConfirmMessage, targetFolder));
+        if (!confirmed)
+        {
+            return false;
+        }
+
+        if (Env.IsSamePath(targetFolder, Env.AppDataDirectory))
+        {
+            SavePortableAppDataFolder(portableAppDataFolder);
+            _currentPortableAppDataFolder = portableAppDataFolder;
+            return true;
+        }
+
         IsMovingAppData = true;
         string? error;
         try
         {
-            error = await MoveAppDataFolderAsync(targetFolder);
+            Directory.CreateDirectory(targetFolder);
+            error = await CopyAppDataFilesAsync(targetFolder);
+            if (error is null)
+            {
+                try
+                {
+                    SavePortableAppDataFolder(portableAppDataFolder);
+                    // Clear custom path config when switching to portable mode
+                    await Env.SaveCustomAppDataDirectoryAsync(string.Empty);
+                }
+                catch (Exception ex)
+                {
+                    error = ex.Message;
+                }
+            }
         }
         finally
         {
@@ -183,11 +292,88 @@ public partial class SystemSettingViewModel : ObservableObject
         if (error is not null)
         {
             await dialog.ShowMessageAsync(Strings.AppDataFolder, error);
-            return;
+            return false;
         }
 
         await dialog.ShowMessageAsync(Strings.AppDataFolder, Strings.AppDataFolderCopySuccess);
+        _currentPortableAppDataFolder = portableAppDataFolder;
         RestartApp();
+        return true;
+    }
+
+    private async Task<bool> SwitchToIndependentAppDataFolderAsync()
+    {
+        var dialog = _services.GetRequiredService<IMainWindowDialog>();
+        var result = await dialog.ShowThreeButtonConfirmationAsync(
+            Strings.SwitchAppDataFolderConfirmTitle,
+            Strings.SwitchToIndependentAppDataFolderMessage,
+            Strings.DefaultLocation,
+            Strings.ChooseLocation,
+            Strings.Cancel);
+
+        if (result is null)
+        {
+            return false;
+        }
+
+        if (result == true)
+        {
+            var defaultFolder = Path.Combine(Env.UserAppDataDirectory, Env.SoftName);
+            return await ApplyIndependentAppDataFolderAsync(defaultFolder, string.Empty);
+        }
+
+        var selectedFolder = await dialog.PickFolderAsync(Strings.AppDataFolder);
+        if (selectedFolder is null)
+        {
+            return false;
+        }
+
+        return await ChangeAppDataFolderAsync(selectedFolder);
+    }
+
+    private void SavePortableAppDataFolder(bool portableAppDataFolder)
+    {
+        _staticConfig.SetConfig(_staticConfig.GetConfig<EnvConfig>() with { PortableAppDataFolder = portableAppDataFolder });
+    }
+
+    private async Task<bool> ApplyIndependentAppDataFolderAsync(string targetFolder, string customAppDataDirectory)
+    {
+        var dialog = _services.GetRequiredService<IMainWindowDialog>();
+        IsMovingAppData = true;
+        string? error;
+        try
+        {
+            Directory.CreateDirectory(targetFolder);
+            error = await CopyAppDataFilesAsync(targetFolder);
+            if (error is null)
+            {
+                try
+                {
+                    await Env.SaveCustomAppDataDirectoryAsync(customAppDataDirectory);
+                    SavePortableAppDataFolder(false);
+                }
+                catch (Exception ex)
+                {
+                    error = ex.Message;
+                }
+            }
+        }
+        finally
+        {
+            IsMovingAppData = false;
+            AppDataMoveProgress = string.Empty;
+        }
+
+        if (error is not null)
+        {
+            await dialog.ShowMessageAsync(Strings.AppDataFolder, error);
+            return false;
+        }
+
+        await dialog.ShowMessageAsync(Strings.AppDataFolder, Strings.AppDataFolderCopySuccess);
+        _currentPortableAppDataFolder = false;
+        RestartApp();
+        return true;
     }
 
     /// <summary>
@@ -218,6 +404,14 @@ public partial class SystemSettingViewModel : ObservableObject
     public async Task RestoreDefaultAppDataFolderAsync()
     {
         var dialog = _services.GetRequiredService<IMainWindowDialog>();
+        var confirmed = await dialog.ShowConfirmationAsync(
+            Strings.RestoreDefaultFolder,
+            Strings.RestoreDefaultFolderConfirmMessage);
+        if (!confirmed)
+        {
+            return;
+        }
+
         IsMovingAppData = true;
         string? error;
         try
@@ -229,6 +423,7 @@ public partial class SystemSettingViewModel : ObservableObject
             {
                 try
                 {
+                    _staticConfig.SetConfig(_staticConfig.GetConfig<EnvConfig>() with { PortableAppDataFolder = false });
                     await Env.SaveCustomAppDataDirectoryAsync(string.Empty);
                 }
                 catch (Exception ex)
@@ -322,6 +517,7 @@ public partial class SystemSettingViewModel : ObservableObject
         try
         {
             await Env.SaveCustomAppDataDirectoryAsync(targetFolder);
+            _staticConfig.SetConfig(_staticConfig.GetConfig<EnvConfig>() with { PortableAppDataFolder = false });
         }
         catch (Exception ex)
         {

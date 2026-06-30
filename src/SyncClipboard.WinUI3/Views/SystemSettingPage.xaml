@@ -23,8 +23,22 @@
                 <ui:SettingsCard Header="{x:Bind i18n:Strings.HideOnStartup}">
                     <ToggleSwitch OnContent="{x:Bind i18n:Strings.On}" OffContent="{x:Bind i18n:Strings.Off}" IsOn="{x:Bind _viewModel.HideWindowOnStartUp, Mode=TwoWay}" />
                 </ui:SettingsCard>
-                <ui:SettingsCard Header="{x:Bind i18n:Strings.UserConfigLocation}">
+                <ui:SettingsCard Header="{x:Bind i18n:Strings.UserConfigLocation}" Visibility="{x:Bind vc:ConvertMethod.BoolToVisibility(_viewModel.ShowPortableLocationSetting), Mode=OneTime}">
                     <ComboBox SelectedItem="{x:Bind _viewModel.UserConfigPosition, Mode=TwoWay}" ItemsSource="{x:Bind vm:SystemSettingViewModel.UserConfigPositions}" DisplayMemberPath="ShownString" />
+                </ui:SettingsCard>
+                <ui:SettingsCard Header="{x:Bind i18n:Strings.AppDataFolder}" Description="{x:Bind vm:SystemSettingViewModel.AppDataDirectory, Mode=OneTime}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{x:Bind _viewModel.AppDataMoveProgress, Mode=OneWay}" Visibility="{x:Bind vc:ConvertMethod.BoolToVisibility(_viewModel.IsMovingAppData), Mode=OneWay}" VerticalAlignment="Center" />
+                        <Button Command="{x:Bind _viewModel.RestoreDefaultAppDataFolderCommand}" Content="{x:Bind i18n:Strings.RestoreDefaultFolder}" Visibility="{x:Bind vc:ConvertMethod.BoolToVisibility(_viewModel.IsUsingCustomIndependentAppDataDirectory), Mode=OneTime}" />
+                        <Button Click="ChangeAppDataFolder"
+                                Content="{x:Bind i18n:Strings.ChangeFolder}"
+                                IsEnabled="{x:Bind vc:ConvertMethod.BoolNegate(_viewModel.IsMovingAppData), Mode=OneWay}"
+                                Visibility="{x:Bind vc:ConvertMethod.BoolToVisibility(_viewModel.IsIndependentAppDataDirectory), Mode=OneWay}" />
+                        <ComboBox SelectedItem="{x:Bind _viewModel.PortableAppDataFolderPosition, Mode=TwoWay}"
+                                  ItemsSource="{x:Bind vm:SystemSettingViewModel.PortableAppDataFolderPositions}"
+                                  DisplayMemberPath="ShownString"
+                                  Visibility="{x:Bind vc:ConvertMethod.BoolToVisibility(_viewModel.ShowPortableLocationSetting), Mode=OneTime}" />
+                    </StackPanel>
                 </ui:SettingsCard>
                 <ui:SettingsCard Header="{x:Bind i18n:Strings.Language}" Description="{x:Bind _viewModel.ChangingLangInfo, Mode=OneWay}">
                     <ComboBox SelectedItem="{x:Bind _viewModel.Language, Mode=TwoWay}" ItemsSource="{x:Bind vm:SystemSettingViewModel.Languages}" DisplayMemberPath="{x:Bind _viewModel.DisplayMemberPath, Mode=OneTime}" />
@@ -34,13 +48,6 @@
                 </ui:SettingsCard>
                 <ui:SettingsCard Header="{x:Bind i18n:Strings.Proxy}">
                     <Button Click="ShowProxySettingDialog" Content="{x:Bind i18n:Strings.Config}" />
-                </ui:SettingsCard>
-                <ui:SettingsCard Header="{x:Bind i18n:Strings.AppDataFolder}" Description="{x:Bind vm:SystemSettingViewModel.AppDataDirectory, Mode=OneTime}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="{x:Bind _viewModel.AppDataMoveProgress, Mode=OneWay}" Visibility="{x:Bind vc:ConvertMethod.BoolToVisibility(_viewModel.IsMovingAppData), Mode=OneWay}" VerticalAlignment="Center" />
-                        <Button Command="{x:Bind _viewModel.RestoreDefaultAppDataFolderCommand}" Content="{x:Bind i18n:Strings.RestoreDefaultFolder}" Visibility="{x:Bind vc:ConvertMethod.BoolToVisibility(vm:SystemSettingViewModel.IsUsingCustomAppDataDirectory), Mode=OneTime}" />
-                        <Button Click="ChangeAppDataFolder" Content="{x:Bind i18n:Strings.ChangeFolder}" IsEnabled="{x:Bind vc:ConvertMethod.BoolNegate(_viewModel.IsMovingAppData), Mode=OneWay}" />
-                    </StackPanel>
                 </ui:SettingsCard>
             </ui:SettingsExpander.Items>
         </ui:SettingsExpander>
