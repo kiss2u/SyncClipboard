@@ -7,7 +7,6 @@ namespace SyncClipboard.Core.Utilities.FileCacheManager;
 
 public sealed class LocalFileCacheManager : IDisposable
 {
-    private readonly LocalFileCacheDbContext _dbContext;
     private readonly ILogger _logger;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private const int SchemaVersion = 1;
@@ -17,10 +16,12 @@ public sealed class LocalFileCacheManager : IDisposable
     {
         _logger = logger;
         EnsureCompatibleDatabase();
-        _dbContext = new LocalFileCacheDbContext();
-        _dbContext.Database.EnsureCreated();
-        WriteSchemaVersion();
+        using var dbContext = CreateDbContext();
+        dbContext.Database.EnsureCreated();
+        WriteSchemaVersion(dbContext);
     }
+
+    private static LocalFileCacheDbContext CreateDbContext() => new();
 
     private void EnsureCompatibleDatabase()
     {
@@ -76,11 +77,11 @@ public sealed class LocalFileCacheManager : IDisposable
         }
     }
 
-    private void WriteSchemaVersion()
+    private void WriteSchemaVersion(LocalFileCacheDbContext dbContext)
     {
         try
         {
-            var connection = _dbContext.Database.GetDbConnection();
+            var connection = dbContext.Database.GetDbConnection();
             connection.Open();
             using var command = connection.CreateCommand();
             command.CommandText = $"CREATE TABLE IF NOT EXISTS {SchemaVersionTableName} (Version INTEGER NOT NULL)";
@@ -101,7 +102,8 @@ public sealed class LocalFileCacheManager : IDisposable
         await _semaphore.WaitAsync(token);
         try
         {
-            var entry = await _dbContext.CacheEntries
+            using var dbContext = CreateDbContext();
+            var entry = await dbContext.CacheEntries
                 .FirstOrDefaultAsync(e => e.Id == id && e.CacheType == cacheType, token);
 
             if (entry == null)
@@ -109,20 +111,20 @@ public sealed class LocalFileCacheManager : IDisposable
 
             if (!File.Exists(entry.FilePath))
             {
-                _dbContext.CacheEntries.Remove(entry);
-                await _dbContext.SaveChangesAsync(token);
+                dbContext.CacheEntries.Remove(entry);
+                await dbContext.SaveChangesAsync(token);
                 return null;
             }
 
             if (!await IsFileValidAsync(entry, token))
             {
-                _dbContext.CacheEntries.Remove(entry);
-                await _dbContext.SaveChangesAsync(token);
+                dbContext.CacheEntries.Remove(entry);
+                await dbContext.SaveChangesAsync(token);
                 return null;
             }
 
             entry.LastAccessTime = DateTime.Now;
-            await _dbContext.SaveChangesAsync(token);
+            await dbContext.SaveChangesAsync(token);
 
             return entry.FilePath;
         }
@@ -146,10 +148,11 @@ public sealed class LocalFileCacheManager : IDisposable
         await _semaphore.WaitAsync(token);
         try
         {
+            using var dbContext = CreateDbContext();
             var fileInfo = new FileInfo(filePath);
             var metadataJson = metadata != null ? JsonSerializer.Serialize(metadata) : string.Empty;
 
-            var entry = await _dbContext.CacheEntries
+            var entry = await dbContext.CacheEntries
                 .FirstOrDefaultAsync(e => e.Id == id && e.CacheType == cacheType, token);
 
             var cachedFileHash = await CalculateFileHashAsync(filePath, token);
@@ -166,7 +169,7 @@ public sealed class LocalFileCacheManager : IDisposable
                     LastAccessTime = DateTime.Now,
                     FileSize = fileInfo.Length
                 };
-                _dbContext.CacheEntries.Add(entry);
+                dbContext.CacheEntries.Add(entry);
             }
             else
             {
@@ -189,7 +192,7 @@ public sealed class LocalFileCacheManager : IDisposable
                 entry.FileSize = fileInfo.Length;
             }
 
-            await _dbContext.SaveChangesAsync(token);
+            await dbContext.SaveChangesAsync(token);
         }
         finally
         {
@@ -202,7 +205,8 @@ public sealed class LocalFileCacheManager : IDisposable
         await _semaphore.WaitAsync();
         try
         {
-            var entries = await _dbContext.CacheEntries
+            using var dbContext = CreateDbContext();
+            var entries = await dbContext.CacheEntries
                 .Where(e => e.Id == id)
                 .ToListAsync();
 
@@ -220,12 +224,12 @@ public sealed class LocalFileCacheManager : IDisposable
                     }
                 }
 
-                _dbContext.CacheEntries.Remove(entry);
+                dbContext.CacheEntries.Remove(entry);
             }
 
             if (entries.Count > 0)
             {
-                await _dbContext.SaveChangesAsync();
+                await dbContext.SaveChangesAsync();
             }
         }
         finally
@@ -239,7 +243,8 @@ public sealed class LocalFileCacheManager : IDisposable
         await _semaphore.WaitAsync();
         try
         {
-            var allEntries = await _dbContext.CacheEntries.ToListAsync();
+            using var dbContext = CreateDbContext();
+            var allEntries = await dbContext.CacheEntries.ToListAsync();
             var orphanEntries = new List<LocalFileCacheEntry>();
 
             // 检查每个数据库记录对应的文件是否存在
@@ -254,8 +259,8 @@ public sealed class LocalFileCacheManager : IDisposable
             // 批量删除孤儿记录
             if (orphanEntries.Count > 0)
             {
-                _dbContext.CacheEntries.RemoveRange(orphanEntries);
-                await _dbContext.SaveChangesAsync();
+                dbContext.CacheEntries.RemoveRange(orphanEntries);
+                await dbContext.SaveChangesAsync();
             }
 
             return orphanEntries.Count;
@@ -273,16 +278,25 @@ public sealed class LocalFileCacheManager : IDisposable
 
     public async Task<CacheStats> GetCacheStatsAsync()
     {
-        var entries = await _dbContext.CacheEntries.ToListAsync();
-
-        return new CacheStats
+        await _semaphore.WaitAsync();
+        try
         {
-            TotalEntries = entries.Count,
-            TotalSizeInMB = entries.Sum(e => e.FileSize) / 1024.0 / 1024.0,
-            GroupProfileCount = entries.Count(e => e.CacheType == "GroupProfile"),
-            GroupProfileSizeInMB = entries.Where(e => e.CacheType == "GroupProfile")
-                                         .Sum(e => e.FileSize) / 1024.0 / 1024.0
-        };
+            using var dbContext = CreateDbContext();
+            var entries = await dbContext.CacheEntries.ToListAsync();
+
+            return new CacheStats
+            {
+                TotalEntries = entries.Count,
+                TotalSizeInMB = entries.Sum(e => e.FileSize) / 1024.0 / 1024.0,
+                GroupProfileCount = entries.Count(e => e.CacheType == "GroupProfile"),
+                GroupProfileSizeInMB = entries.Where(e => e.CacheType == "GroupProfile")
+                                             .Sum(e => e.FileSize) / 1024.0 / 1024.0
+            };
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 
     private static async Task<bool> IsFileValidAsync(LocalFileCacheEntry entry, CancellationToken token)
@@ -317,6 +331,5 @@ public sealed class LocalFileCacheManager : IDisposable
     public void Dispose()
     {
         _semaphore?.Dispose();
-        _dbContext?.Dispose();
     }
 }
