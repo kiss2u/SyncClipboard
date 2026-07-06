@@ -4,7 +4,7 @@ using SyncClipboard.Core.I18n;
 using SyncClipboard.Core.Interfaces;
 using System;
 using System.Threading.Tasks;
-using Windows.Storage.Pickers;
+using Microsoft.Windows.Storage.Pickers;
 
 namespace SyncClipboard.WinUI3.Services;
 
@@ -75,16 +75,22 @@ public class WinUIDialog : IMainWindowDialog
 
     public async Task<string?> PickFolderAsync(string title)
     {
-        var folderPicker = new FolderPicker
+        try
         {
-            SuggestedStartLocation = PickerLocationId.ComputerFolder
-        };
-        folderPicker.FileTypeFilter.Add("*");
+            var folderPicker = new FolderPicker(App.Current.MainWindow.AppWindow.Id)
+            {
+                SuggestedStartLocation = PickerLocationId.ComputerFolder,
+                CommitButtonText = title
+            };
 
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
-        WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hwnd);
-
-        var folder = await folderPicker.PickSingleFolderAsync();
-        return folder?.Path;
+            var folder = await folderPicker.PickSingleFolderAsync();
+            return folder?.Path;
+        }
+        catch (Exception ex)
+        {
+            App.Current.Logger?.Write(nameof(WinUIDialog), ex.ToString());
+            await ShowMessageAsync(title, ex.Message);
+            return null;
+        }
     }
 }

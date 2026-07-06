@@ -2,9 +2,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using SyncClipboard.Core.I18n;
+using SyncClipboard.Core.Interfaces;
 using SyncClipboard.Core.ViewModels;
 using System;
-using Windows.Storage.Pickers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -17,11 +17,13 @@ namespace SyncClipboard.WinUI3.Views;
 public sealed partial class SystemSettingPage : Page
 {
     private readonly SystemSettingViewModel _viewModel;
+    private readonly IMainWindowDialog _dialog;
 
     public SystemSettingPage()
     {
         this.InitializeComponent();
         _viewModel = App.Current.Services.GetRequiredService<SystemSettingViewModel>();
+        _dialog = App.Current.Services.GetRequiredService<IMainWindowDialog>();
         this.DataContext = _viewModel;
     }
 
@@ -36,22 +38,13 @@ public sealed partial class SystemSettingPage : Page
 
     private async void ChangeAppDataFolder(object sender, RoutedEventArgs _)
     {
-        var folderPicker = new FolderPicker
-        {
-            SuggestedStartLocation = PickerLocationId.ComputerFolder
-        };
-        folderPicker.FileTypeFilter.Add("*");
-
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.MainWindow);
-        WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hwnd);
-
-        var folder = await folderPicker.PickSingleFolderAsync();
-        if (folder is null) return;
-
         if (sender is Button button) button.IsEnabled = false;
         try
         {
-            await _viewModel.ChangeAppDataFolderAsync(folder.Path);
+            var folder = await _dialog.PickFolderAsync(Strings.AppDataFolder);
+            if (folder is null) return;
+
+            await _viewModel.ChangeAppDataFolderAsync(folder);
         }
         finally
         {

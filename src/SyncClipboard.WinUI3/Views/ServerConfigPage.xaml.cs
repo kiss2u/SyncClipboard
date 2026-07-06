@@ -7,7 +7,7 @@ using SyncClipboard.Core.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Windows.Storage.Pickers;
+using Microsoft.Windows.Storage.Pickers;
 
 namespace SyncClipboard.WinUI3.Views;
 
@@ -53,19 +53,12 @@ public sealed partial class ServerConfigPage : Page
         button.IsEnabled = false;
         using ScopeGuard scropGuard = new(() => button.IsEnabled = true);
 
-        var openPicker = new FileOpenPicker
+        var openPicker = new FileOpenPicker(App.Current.MainWindow.AppWindow.Id)
         {
             ViewMode = PickerViewMode.List
         };
         types.ForEach(openPicker.FileTypeFilter.Add);
         openPicker.FileTypeFilter.Add("*");
-
-        // Retrieve the window handle (HWND) of the current WinUI 3 window.
-        var window = ((MainWindow)App.Current.Services.GetRequiredService<IMainWindow>());
-        var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-
-        // Initialize the file picker with the window handle (HWND).
-        WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
 
         var file = await openPicker.PickSingleFileAsync();
         return file?.Path;
