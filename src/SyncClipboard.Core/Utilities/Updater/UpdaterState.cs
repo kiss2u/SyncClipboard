@@ -7,6 +7,7 @@ public enum UpdaterState
     UpdateAvailable,
     UpdateAvailableAt3rdPartySrc,
     UpdateAvailableAtGitHubExtra,
+    UpdateAvailableAtMarket,
     ReadyForDownload,
     UpToDate,
     Downloading,

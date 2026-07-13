@@ -156,6 +156,7 @@ public partial class AboutViewModel : ObservableObject
             UpdaterState.UpdateAvailable => Severity.Warning,
             UpdaterState.UpdateAvailableAt3rdPartySrc => Severity.Warning,
             UpdaterState.UpdateAvailableAtGitHubExtra => Severity.Warning,
+            UpdaterState.UpdateAvailableAtMarket => Severity.Warning,
             UpdaterState.ReadyForDownload => Severity.Warning,
             UpdaterState.UpToDate => Severity.Success,
             UpdaterState.Downloading => Severity.Info,

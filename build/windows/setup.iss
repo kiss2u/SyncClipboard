@@ -33,9 +33,10 @@ Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
+PrivilegesRequiredOverridesAllowed=dialog commandline
 SetupIconFile=..\..\src\SyncClipboard.WinUI3\Assets\icon.ico
 UninstallDisplayIcon={app}\{#AppExe}
+UninstallDisplayName={#AppName}
 DisableProgramGroupPage=no
 DisableWelcomePage=no
 DisableDirPage=no
@@ -76,10 +77,13 @@ english.AlreadyInstalled=Detected {#AppName} is already installed.%n%nInstalled 
 english.RemoveAppDataPrompt=Would you also like to remove the following application data and settings directories?
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
 Source: "{#SourceFolder}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs uninsrestartdelete
+
+[UninstallDelete]
+Type: files; Name: "{app}\update_info.json"
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"
@@ -190,6 +194,26 @@ begin
     Result := 1; // Overwrite
 end;
 
+function IsWingetDistribution(): Boolean;
+begin
+  Result := UpperCase(ExpandConstant('{param:SYNC_CLIPBOARD_DISTRIBUTION|}')) = 'WINGET';
+end;
+
+procedure WriteWingetUpdateInfo();
+var
+  Json: String;
+begin
+  Json :=
+    '{' + #13#10 +
+    '    "UpdateInfo": {' + #13#10 +
+    '        "manage_type": "market",' + #13#10 +
+    '        "update_src": "winget",' + #13#10 +
+    '        "package_name": "JericX.SyncClipboard"' + #13#10 +
+    '    }' + #13#10 +
+    '}';
+  SaveStringToFile(ExpandConstant('{app}\update_info.json'), Json, False);
+end;
+
 function InitializeSetup(): Boolean;
 var
   InstalledVersion, InstallPath: String;
@@ -199,7 +223,11 @@ begin
 
   if GetInstalledInfo(InstalledVersion, InstallPath) then
   begin
-    Choice := ShowAlreadyInstalledDialog(InstalledVersion, InstallPath);
+    if WizardSilent() then
+      Choice := 1
+    else
+      Choice := ShowAlreadyInstalledDialog(InstalledVersion, InstallPath);
+
     if Choice = 1 then
     begin
       GOverwriteInstall := True;
@@ -214,7 +242,13 @@ begin
 
   if IsAppRunning('{#AppExe}') then
   begin
-    Result := TryCloseApp('{#AppExe}', '{cm:NeedClose}');
+    if WizardSilent() then
+    begin
+      Log('SyncClipboard is running. Closing it for silent setup.');
+      Result := KillApp('{#AppExe}');
+    end
+    else
+      Result := TryCloseApp('{#AppExe}', '{cm:NeedClose}');
   end;
 end;
 
@@ -224,7 +258,13 @@ begin
 
   if IsAppRunning('{#AppExe}') then
   begin
-    Result := TryCloseApp('{#AppExe}', '{cm:UninstallNeedClose}');
+    if UninstallSilent() then
+    begin
+      Log('SyncClipboard is running. Closing it for silent uninstall.');
+      Result := KillApp('{#AppExe}');
+    end
+    else
+      Result := TryCloseApp('{#AppExe}', '{cm:UninstallNeedClose}');
   end;
 end;
 
@@ -241,6 +281,12 @@ begin
     Result := True;
 end;
 
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if (CurStep = ssPostInstall) and IsWingetDistribution() then
+    WriteWingetUpdateInfo();
+end;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   Msg: String;
@@ -249,11 +295,16 @@ var
 begin
   if CurUninstallStep = usUninstall then
   begin
-    DataDir := ExpandConstant('{userappdata}\{#AppName}');
-    GlobalDir := ExpandConstant('{userappdata}\{#AppName}_global');
-    Msg := ExpandConstant('{cm:RemoveAppDataPrompt}') + #13#10#13#10 +
-           DataDir + #13#10 + GlobalDir;
-    GRemoveAppData := MsgBox(Msg, mbConfirmation, MB_YESNO) = IDYES;
+    if UninstallSilent() then
+      GRemoveAppData := False
+    else
+    begin
+      DataDir := ExpandConstant('{userappdata}\{#AppName}');
+      GlobalDir := ExpandConstant('{userappdata}\{#AppName}_global');
+      Msg := ExpandConstant('{cm:RemoveAppDataPrompt}') + #13#10#13#10 +
+             DataDir + #13#10 + GlobalDir;
+      GRemoveAppData := MsgBox(Msg, mbConfirmation, MB_YESNO) = IDYES;
+    end;
   end;
   if CurUninstallStep = usPostUninstall then
   begin

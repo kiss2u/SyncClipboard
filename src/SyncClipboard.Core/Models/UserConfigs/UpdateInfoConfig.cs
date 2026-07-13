@@ -5,6 +5,7 @@ namespace SyncClipboard.Core.Models.UserConfigs;
 public record class UpdateInfoConfig
 {
     public const string TypeExternal = "external";
+    public const string TypeMarket = "market";
     public const string TypeManual = "manual";
 
     [JsonPropertyName("manage_type")]

@@ -742,6 +742,9 @@ Middle click: Copy and paste</value>
   <data name="UpdateFrom3rdSrc" xml:space="preserve">
     <value>New version {0} found, please update from {1}</value>
   </data>
+  <data name="CopyPackageName" xml:space="preserve">
+    <value>Copy package name</value>
+  </data>
   <data name="Downloading" xml:space="preserve">
     <value>Downloading</value>
   </data>

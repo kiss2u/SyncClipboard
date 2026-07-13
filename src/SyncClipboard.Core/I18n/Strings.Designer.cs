@@ -614,6 +614,15 @@ namespace SyncClipboard.Core.I18n {
         }
         
         /// <summary>
+        ///   查找类似 Copy package name 的本地化字符串。
+        /// </summary>
+        public static string CopyPackageName {
+            get {
+                return ResourceManager.GetString("CopyPackageName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 . Current package is &apos;{0}&apos;, please download manually. 的本地化字符串。
         /// </summary>
         public static string CurrentPackageDownloadManually {

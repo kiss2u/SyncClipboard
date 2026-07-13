@@ -740,6 +740,9 @@ Esc：关闭面板</value>
   <data name="UpdateFrom3rdSrc" xml:space="preserve">
     <value>发现新版本{0}，请使用{1}更新</value>
   </data>
+  <data name="CopyPackageName" xml:space="preserve">
+    <value>复制包名</value>
+  </data>
   <data name="Downloading" xml:space="preserve">
     <value>正在下载</value>
   </data>

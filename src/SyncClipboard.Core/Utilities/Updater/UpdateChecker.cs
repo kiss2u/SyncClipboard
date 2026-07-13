@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using NativeNotification.Interface;
+using SyncClipboard.Core.Clipboard;
 using SyncClipboard.Core.Commons;
 using SyncClipboard.Core.Interfaces;
 using SyncClipboard.Core.Models;
@@ -38,6 +39,7 @@ public class UpdateChecker : IStateMachine<UpdaterStatus>
     private readonly GithubUpdater githubUpdater;
     private readonly IHttp http;
     private readonly ILogger logger;
+    private readonly LocalClipboardSetter localClipboardSetter;
     private readonly IMainWindow mainWindow;
     private readonly ConfigManager configManager;
 
@@ -53,6 +55,7 @@ public class UpdateChecker : IStateMachine<UpdaterStatus>
         GithubUpdater githubUpdater,
         IHttp http,
         ILogger logger,
+        LocalClipboardSetter localClipboardSetter,
         INotificationManager notification,
         IMainWindow mainWindow,
         ConfigManager configManager,
@@ -61,6 +64,7 @@ public class UpdateChecker : IStateMachine<UpdaterStatus>
         this.githubUpdater = githubUpdater;
         this.http = http;
         this.logger = logger;
+        this.localClipboardSetter = localClipboardSetter;
         this.configManager = configManager;
         this.notificationManager = notification;
         this.mainWindow = mainWindow;
@@ -94,6 +98,7 @@ public class UpdateChecker : IStateMachine<UpdaterStatus>
     {
         if (CurrentState.State is not (UpdaterState.ReadyForDownload
             or UpdaterState.UpdateAvailableAt3rdPartySrc
+            or UpdaterState.UpdateAvailableAtMarket
             or UpdaterState.UpdateAvailable
             or UpdaterState.Downloaded))
         {
@@ -162,7 +167,11 @@ public class UpdateChecker : IStateMachine<UpdaterStatus>
         (NeedUpdate, GithubRelease) = await githubUpdater.Check(token);
         if (NeedUpdate)
         {
-            if (updateInfo.ManageType == UpdateInfoConfig.TypeManual
+            if (updateInfo.ManageType == UpdateInfoConfig.TypeMarket)
+            {
+                SetStatus(UpdaterState.UpdateAvailableAtMarket);
+            }
+            else if (updateInfo.ManageType == UpdateInfoConfig.TypeManual
                 && updateInfo.UpdateSrc == "github"
                 && !string.IsNullOrEmpty(updateInfo.PackageName))
             {
@@ -282,6 +291,11 @@ public class UpdateChecker : IStateMachine<UpdaterStatus>
         return Task.CompletedTask;
     }
 
+    private Task CopyPackageName(CancellationToken token)
+    {
+        return localClipboardSetter.Set(new TextProfile(updateInfo.PackageName), token);
+    }
+
     private void SetErrorState(string message)
     {
         CurrentState = new UpdaterStatus(
@@ -310,6 +324,9 @@ public class UpdateChecker : IStateMachine<UpdaterStatus>
             UpdaterState.ReadyForDownload => I18n.Strings.FoundNewVersion + GithubRelease!.TagName,
             UpdaterState.UpToDate => I18n.Strings.ItsLatestVersion,
             UpdaterState.UpdateAvailableAt3rdPartySrc => string.Format(I18n.Strings.UpdateFrom3rdSrc, GithubRelease!.TagName, updateInfo.UpdateSrc),
+            UpdaterState.UpdateAvailableAtMarket => string.IsNullOrEmpty(updateInfo.UpdateSrc)
+                ? I18n.Strings.FoundNewVersion + GithubRelease!.TagName
+                : string.Format(I18n.Strings.UpdateFrom3rdSrc, GithubRelease!.TagName, updateInfo.UpdateSrc),
             UpdaterState.UpdateAvailable => I18n.Strings.FoundNewVersion + GithubRelease!.TagName,
             UpdaterState.Downloading => $"{I18n.Strings.Downloading} {updateInfo.PackageName}",
             UpdaterState.Downloaded => I18n.Strings.NewVersionDownloaded,
@@ -330,6 +347,8 @@ public class UpdateChecker : IStateMachine<UpdaterStatus>
             UpdaterState.ReadyForDownload => (I18n.Strings.DownloadInstaller, SingletonTask(DownloadUpdatePackage)),
             // UpdaterState.UpToDate => null,
             //UpdaterState.UpdateAvailableAt3rdPartySrc => null,
+            UpdaterState.UpdateAvailableAtMarket when string.IsNullOrEmpty(updateInfo.PackageName) is false
+                => (I18n.Strings.CopyPackageName, SingletonTask(CopyPackageName)),
             UpdaterState.UpdateAvailable => (I18n.Strings.OpenUpdatePage, OpenUpdatePage),
             UpdaterState.UpdateAvailableAtGitHubExtra => (I18n.Strings.OpenUpdatePage, OpenUpdatePage),
             UpdaterState.Downloading => (I18n.Strings.Cancel, SingletonTask(CancelUpdate)),
