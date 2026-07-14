@@ -17,6 +17,7 @@ using SyncClipboard.Core.Utilities;
 using SyncClipboard.Core.Utilities.Runner;
 using SyncClipboard.Core.ViewModels;
 using SyncClipboard.Core.ViewModels.Sub;
+using SyncClipboard.WinUI3.Utilities;
 using SyncClipboard.WinUI3.ValueConverters;
 using SyncClipboard.WinUI3.Win32;
 using System;
@@ -459,8 +460,8 @@ public sealed partial class HistoryWindow : Window, IWindow
         try
         {
             e.Data.RequestedOperation = DataPackageOperation.Copy;
+            await DragUiHelper.SetDragIconAsync(e.DragUI, draggedItem);
             var success = await _viewModel.FillDragPackage(e.Data, draggedItem, CancellationToken.None);
-            e.DragUI.SetContentFromDataPackage();
 
             if (!success)
             {
