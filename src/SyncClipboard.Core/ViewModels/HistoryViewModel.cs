@@ -335,7 +335,6 @@ public partial class HistoryViewModel : ObservableObject
             runtimeConfig.SetConfig(runtimeConfig.GetConfig<HistoryWindowConfig>() with { ShowPreviewPanel = value });
             OnPropertyChanged(nameof(ShowPreviewPanel));
             OnPropertyChanged(nameof(IsCompactListMode));
-            OnPropertyChanged(nameof(CompactListMaxLines));
             OnPropertyChanged(nameof(ShowSyncStateIndicator));
         }
     }
@@ -360,7 +359,6 @@ public partial class HistoryViewModel : ObservableObject
             runtimeConfig.SetConfig(runtimeConfig.GetConfig<HistoryWindowConfig>() with { CompactListWhenPreview = value });
             OnPropertyChanged(nameof(CompactListWhenPreview));
             OnPropertyChanged(nameof(IsCompactListMode));
-            OnPropertyChanged(nameof(CompactListMaxLines));
         }
     }
 
@@ -373,11 +371,6 @@ public partial class HistoryViewModel : ObservableObject
     /// 是否显示同步状态指示器（ShowSyncState 为 true 且 ShowPreviewPanel 为 false）
     /// </summary>
     public bool ShowSyncStateIndicator => ShowSyncState && !ShowPreviewPanel;
-
-    /// <summary>
-    /// 紧凑模式下的最大行数：1 表示单行，0 表示无限制
-    /// </summary>
-    public int CompactListMaxLines => IsCompactListMode ? 1 : 0;
 
     public ScreenPosition? GetCaretPosition()
     {

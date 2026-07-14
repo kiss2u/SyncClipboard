@@ -32,7 +32,7 @@
                 <Setter Property="FontSize" Value="12" />
             </Style>
             <DataTemplate x:Key="normalTemplate" x:DataType="vms:HistoryRecordVM">
-                <TextBlock Text="{x:Bind vc:ConvertMethod.LimitLines(Text), Mode=OneWay}" MaxLines="{Binding MaxLines, Source={StaticResource CompactListProxy}, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{x:Bind vc:ConvertMethod.LimitHistoryListText(Text, local:HistoryListModeProxy.Current.IsCompactListMode), Mode=OneWay}" TextTrimming="CharacterEllipsis" />
             </DataTemplate>
             <DataTemplate x:Key="imageTemplate" x:DataType="vms:HistoryRecordVM">
                 <StackPanel Orientation="Vertical" Spacing="5">
@@ -45,12 +45,11 @@
                            CanDrag="True"
                            Source="{x:Bind vc:ConvertMethod.CreateBitmap(PreviewImage), Mode=OneWay}"
                            Visibility="Collapsed" />
-                    <TextBlock HorizontalAlignment="Left" Text="{x:Bind Text, Mode=OneWay}" />
+                    <TextBlock HorizontalAlignment="Left" Text="{x:Bind vc:ConvertMethod.LimitHistoryListText(Text, local:HistoryListModeProxy.Current.IsCompactListMode), Mode=OneWay}" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
             </DataTemplate>
             <local:ClipboardViewerTemplateSelector x:Key="clipboardTemplateSelector" Normal="{StaticResource normalTemplate}" Image="{StaticResource imageTemplate}" />
             <local:FontScaleProxy x:Key="FontScaleProxy" />
-            <local:CompactListProxy x:Key="CompactListProxy" />
             <Flyout x:Key="FontScaleFlyout" Opening="FontScaleFlyout_Opening">
                 <StackPanel Orientation="Horizontal" Padding="4" Spacing="4">
                     <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" />
