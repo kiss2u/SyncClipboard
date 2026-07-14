@@ -138,6 +138,14 @@ public sealed partial class HistoryWindow : Window, IWindow
         {
             DispatcherQueue.TryEnqueue(() => ApplyCompactListMode(_viewModel.IsCompactListMode));
         }
+        else if (e.PropertyName == nameof(HistoryViewModel.FilterOptions))
+        {
+            DispatcherQueue.TryEnqueue(InitializeSelectorBar);
+        }
+        else if (e.PropertyName == nameof(HistoryViewModel.SelectedFilter))
+        {
+            DispatcherQueue.TryEnqueue(UpdateSelectorBarSelection);
+        }
     }
 
     private void ApplyCompactListMode(bool isCompactListMode)
@@ -519,7 +527,10 @@ public sealed partial class HistoryWindow : Window, IWindow
 
     private void SelectorBar_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs _)
     {
-        _viewModel.SelectedFilter = ((LocaleString<HistoryFilterType>)sender.SelectedItem.DataContext).Key;
+        if (sender.SelectedItem?.DataContext is LocaleString<HistoryFilterType> option)
+        {
+            _viewModel.SelectedFilter = option.Key;
+        }
     }
 
     private void InitializeSelectorBar()
@@ -537,15 +548,7 @@ public sealed partial class HistoryWindow : Window, IWindow
             _FilterSelectorBar.Items.Add(item);
         }
 
-        _FilterSelectorBar.SelectedItem = _FilterSelectorBar.Items[(int)_viewModel.SelectedFilter];
-
-        _viewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(_viewModel.SelectedFilter))
-            {
-                UpdateSelectorBarSelection();
-            }
-        };
+        UpdateSelectorBarSelection();
     }
 
     private void InitializeScrollWatcher()
@@ -641,9 +644,13 @@ public sealed partial class HistoryWindow : Window, IWindow
 
     private void UpdateSelectorBarSelection()
     {
-        if ((int)_viewModel.SelectedFilter < _FilterSelectorBar.Items.Count)
+        foreach (var item in _FilterSelectorBar.Items)
         {
-            _FilterSelectorBar.SelectedItem = _FilterSelectorBar.Items[(int)_viewModel.SelectedFilter];
+            if (item.DataContext is LocaleString<HistoryFilterType> option && option.Key == _viewModel.SelectedFilter)
+            {
+                _FilterSelectorBar.SelectedItem = item;
+                return;
+            }
         }
     }
 

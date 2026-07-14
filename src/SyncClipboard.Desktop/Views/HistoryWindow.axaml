@@ -129,6 +129,9 @@
                 <ToggleButton ToolTip.Tip="{x:Static i18n:Strings.WindowTopmost}" Classes="FontIcon" IsChecked="{Binding IsTopmost, Mode=TwoWay}">
                     <ui:FontIcon Glyph="&#xE840;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
                 </ToggleButton>
+                <ToggleButton ToolTip.Tip="{x:Static i18n:Strings.OnlyShowStarred}" Classes="FontIcon" IsChecked="{Binding OnlyShowStarred, Mode=TwoWay}">
+                    <ui:FontIcon Glyph="&#xE734;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
+                </ToggleButton>
                 <ToggleButton ToolTip.Tip="{x:Static i18n:Strings.PreviewPanel}" Classes="FontIcon" IsChecked="{Binding ShowPreviewPanel, Mode=TwoWay}">
                     <ui:FontIcon Glyph="&#xE145;" FontFamily="{StaticResource SymbolThemeFontFamily}" />
                 </ToggleButton>
@@ -141,7 +144,9 @@
                         <ui:FAMenuFlyout>
                             <ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.ScrollToTopOnReopen}" IsChecked="{Binding ScrollToTopOnReopen, Mode=TwoWay}" />
                             <ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.CloseHistoryWindowWhenLostFocus}" IsChecked="{Binding CloseWhenLostFocus, Mode=TwoWay}" />
+                            <ui:MenuFlyoutSeparator />
                             <ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.ShowSyncStatus}" IsChecked="{Binding ShowSyncState, Mode=TwoWay}" />
+                            <ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.ShowStarredFilter}" IsChecked="{Binding ShowStarredFilter, Mode=TwoWay}" />
                             <!--<ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.OnlyShowLocal}" IsChecked="{Binding OnlyShowLocal, Mode=TwoWay}" />-->
                             <ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.SortByLastAccessed}" IsChecked="{Binding SortByLastAccessed, Mode=TwoWay}" />
                             <ui:ToggleMenuFlyoutItem Text="{x:Static i18n:Strings.CompactListWhenPreview}" IsChecked="{Binding CompactListWhenPreview, Mode=TwoWay}" />

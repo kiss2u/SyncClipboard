@@ -82,6 +82,9 @@
                 <ToggleButton Style="{StaticResource IconToggleButtonStyle}" ToolTipService.ToolTip="{x:Bind i18n:Strings.WindowTopmost}" IsChecked="{x:Bind _viewModel.IsTopmost, Mode=TwoWay}">
                     <FontIcon Glyph="&#xE840;" />
                 </ToggleButton>
+                <ToggleButton Style="{StaticResource IconToggleButtonStyle}" ToolTipService.ToolTip="{x:Bind i18n:Strings.OnlyShowStarred}" IsChecked="{x:Bind _viewModel.OnlyShowStarred, Mode=TwoWay}">
+                    <FontIcon Glyph="&#xE734;" />
+                </ToggleButton>
                 <ToggleButton Style="{StaticResource IconToggleButtonStyle}" ToolTipService.ToolTip="{x:Bind i18n:Strings.PreviewPanel}" IsChecked="{x:Bind _viewModel.ShowPreviewPanel, Mode=TwoWay}">
                     <FontIcon Glyph="&#xE90C;" />
                 </ToggleButton>
@@ -94,7 +97,9 @@
                         <MenuFlyout Placement="Bottom">
                             <ToggleMenuFlyoutItem Text="{x:Bind i18n:Strings.ScrollToTopOnReopen}" IsChecked="{x:Bind _viewModel.ScrollToTopOnReopen, Mode=TwoWay}" />
                             <ToggleMenuFlyoutItem Text="{x:Bind i18n:Strings.CloseHistoryWindowWhenLostFocus}" IsChecked="{x:Bind _viewModel.CloseWhenLostFocus, Mode=TwoWay}" />
+                            <MenuFlyoutSeparator />
                             <ToggleMenuFlyoutItem Text="{x:Bind i18n:Strings.ShowSyncStatus}" IsChecked="{x:Bind _viewModel.ShowSyncState, Mode=TwoWay}" />
+                            <ToggleMenuFlyoutItem Text="{x:Bind i18n:Strings.ShowStarredFilter}" IsChecked="{x:Bind _viewModel.ShowStarredFilter, Mode=TwoWay}" />
                             <!--<ToggleMenuFlyoutItem Text="{x:Bind i18n:Strings.OnlyShowLocal}" IsChecked="{x:Bind _viewModel.OnlyShowLocal, Mode=TwoWay}" />-->
                             <ToggleMenuFlyoutItem Text="{x:Bind i18n:Strings.SortByLastAccessed}" IsChecked="{x:Bind _viewModel.SortByLastAccessed, Mode=TwoWay}" />
                             <ToggleMenuFlyoutItem Text="{x:Bind i18n:Strings.CompactListWhenPreview}" IsChecked="{x:Bind _viewModel.CompactListWhenPreview, Mode=TwoWay}" />
