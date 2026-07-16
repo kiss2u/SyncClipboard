@@ -75,6 +75,7 @@ public partial class AboutViewModel : ObservableObject
         new OpenSourceSoftware("Vanara", "https://github.com/dahall/Vanara", "Vanara/LICENSE.txt"),
         new OpenSourceSoftware("SharpHook", "https://github.com/TolikPylypchuk/SharpHook", "SharpHook/LICENSE.txt"),
         new OpenSourceSoftware("Quartz.NET", "https://www.quartz-scheduler.net/", "quartznet/license.txt"),
+        new OpenSourceSoftware("Hugeicons Free Stroke Rounded", "https://hugeicons.com/", "Hugeicons.Free.StrokeRounded.NOTICE.md"),
 #if LINUX
         new OpenSourceSoftware("MiSans Font", "https://hyperos.mi.com/font", string.Empty),
 #endif
